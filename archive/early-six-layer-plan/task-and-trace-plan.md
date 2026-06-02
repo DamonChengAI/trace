@@ -1,5 +1,7 @@
 # Claude Code 双模型 Agent Eval 主方案
 
+> 当前最终执行口径见 [final-mvp-video-workflow-trace-plan.md](final-mvp-video-workflow-trace-plan.md)。本文保留为早期方案参考，不再作为硬约束。
+
 ## 1. 核心目标
 
 这次作业的核心目标是：评测 **Opus 和 DeepSeek 在同一个 Claude Code 框架下完成复杂生产力任务的效果差异**。
@@ -111,6 +113,8 @@
 
 两个模型使用同一份任务 prompt，同一个起始 commit，同样的项目规则和工具权限。
 
+Opus 版 Claude Code 使用官方入口 `claude`，主对比也使用最高规格：模型显式指定为 `opus`，effort level 为 `max`。
+
 本次 DeepSeek 版 Claude Code 作为独立入口执行：
 
 - 官方 Claude 继续使用 `claude`，DeepSeek 版使用 `claude-ds`，两个会话分开跑。
@@ -118,6 +122,8 @@
 - DeepSeek 的 subagent 默认走 `deepseek-v4-flash`，用于轻量审查和辅助任务。
 - DeepSeek API key 存在 macOS Keychain，不写入项目、不写入 `~/.claude`、不进入 trace 或报告。
 - 面试主实验先比较 Opus 和 DeepSeek Pro + max。如果差异不明显，再追加一轮 DeepSeek 降级模型作为补充实验，用来观察能力边界。
+
+正式执行命令、worktree 隔离、MCP 对齐、trace 保存和验收收集见 [dual-model-execution-runbook.md](/Users/dacheng/Desktop/doubao/execution/dual-model-execution-runbook.md)。两个模型共用的任务指令见 [task-prompt.md](/Users/dacheng/Desktop/doubao/execution/task-prompt.md)。
 
 执行顺序：
 
@@ -141,6 +147,8 @@
 5. 风险对比：越界、泄密风险、未验证、重写已有结构、报告偏技术等问题。
 6. 产品判断：哪个模型更适合复杂生产力 Agent 任务，适合什么场景，需要什么 harness 补强。
 7. 证据附录：关键 trace 片段、命令结果、文件 diff、最终产物链接。
+
+trace 对比工具的设计、现成工具取舍和可视化方案见 [07-trace-comparator-tool-design.md](/Users/dacheng/Desktop/doubao/07-trace-comparator-tool-design.md)。
 
 ## 9. 真实视频策略
 

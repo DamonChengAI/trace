@@ -3,3 +3,6 @@
 .env.*
 outputs/
 trace-output/
+runs/
+*.stream.jsonl
+*.trace.jsonl

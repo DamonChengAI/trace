@@ -1,5 +1,7 @@
 # Workflow Sandbox 项目准备方案
 
+> 当前最终执行口径见 [final-mvp-video-workflow-trace-plan.md](final-mvp-video-workflow-trace-plan.md)。本文保留为早期准备方案参考，不再作为硬约束。
+
 ## 项目定位
 
 本次评测使用：
