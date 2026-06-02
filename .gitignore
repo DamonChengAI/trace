@@ -6,3 +6,4 @@ trace-output/
 runs/
 *.stream.jsonl
 *.trace.jsonl
+.current-run-id

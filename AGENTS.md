@@ -18,8 +18,8 @@ trace comparator 可以优先复用开源工具或现成日志/trace 能力，�
 
 所有后续工作都必须服务这件事：
 
-- 任务要简单好讲：生成 30 秒左右视频，主题是“一句需求如何变成一条可交付视频”。
-- workflow 要完整但不扩张：需求、分镜、多张图片、对应音频、拼接成片、失败处理、hook、subagent、安全检查、交付报告。
+- 任务要简单好讲：生成 30 秒左右视频，标题是《快来购买豆包高级套餐吧！》。
+- workflow 要完整但不扩张：联网检索最新公开信息、3 张图片、对应音频、图片拼接成片、失败处理、hook、subagent、安全检查、交付报告。
 - trace 要可比较：同一 prompt、同一 baseline、同一工具边界、同一检查命令、隔离执行。
 - Claude Code 核心能力要有最小证据：AGENTS、nested rules、skill、scripts、hook、subagent、MCP/search、eval/review、security check、grader。
 - 面试表达要低成本：先讲产品目标和业务判断，再讲必要 trace 证据；不讲复杂系统，不讲视频审美。
@@ -40,7 +40,9 @@ execution/dual-model-execution-runbook.md
 
 - 不做前端可视化。
 - 不做六层页面。
-- 生成 30 秒左右视频，主题是“一句需求如何变成一条可交付视频”。
+- 生成 30 秒左右视频，标题是《快来购买豆包高级套餐吧！》。
+- 只生成图片，不生成 provider 视频；每条视频用 3 张图片拼接。
+- 先联网检索豆包高级套餐或会员的最新公开信息，再生成脚本。
 - 任务约束写入 `workflow-sandbox` 的 AGENTS、nested rules、skill、hook、subagent、scripts 和 check。
 - 用 Opus 和 DeepSeek 两次执行 trace 比较模型差异。
 
