@@ -102,6 +102,14 @@ function countMatches(text, pattern) {
   return [...String(text).matchAll(pattern)].length;
 }
 
+function formatDurationMs(value) {
+  if (!Number.isFinite(Number(value))) return "n/a";
+  const totalSeconds = Math.round(Number(value) / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes > 0 ? `${minutes}m ${String(seconds).padStart(2, "0")}s` : `${seconds}s`;
+}
+
 function normalizeErrorText(value) {
   return sanitizeForReport(value).replace(/\s+/g, " ").replace(/^Error:\s*/, "").trim();
 }
@@ -601,6 +609,20 @@ function buildEvidence(modelId, trace, artifacts) {
     }
   );
   add(
+    "process.work_time",
+    "Process Cost（过程成本）",
+    "neutral",
+    `端到端耗时 ${formatDurationMs(trace.durationMs)}，API 耗时 ${formatDurationMs(trace.apiDurationMs)}，turns=${trace.turns ?? "unknown"}。`,
+    trace.path,
+    {
+      duration_ms: trace.durationMs,
+      duration_label: formatDurationMs(trace.durationMs),
+      api_duration_ms: trace.apiDurationMs,
+      api_duration_label: formatDurationMs(trace.apiDurationMs),
+      turns: trace.turns
+    }
+  );
+  add(
     "product.expression",
     "产品表达",
     trace.finalSummary.hasProductLanguage && !trace.finalSummary.hasContradictionAboutVideo ? "positive" : "warning",
@@ -736,6 +758,46 @@ function singleRunSignals(runSummary) {
       {
         opus: { read_paths: opus.trace.readPaths.length, research_urls: opus.artifacts.research.urlCount, audit_ratio: Number(opusAuditRatio.toFixed(3)) },
         deepseek: { read_paths: deepseek.trace.readPaths.length, research_urls: deepseek.artifacts.research.urlCount, audit_ratio: Number(deepseekAuditRatio.toFixed(3)) }
+      }
+    )
+  );
+
+  const opusDuration = Number(opus.trace.durationMs || 0);
+  const deepseekDuration = Number(deepseek.trace.durationMs || 0);
+  const timingGapMs = Math.abs(opusDuration - deepseekDuration);
+  const timeLeader =
+    opusDuration > 0 && deepseekDuration > 0 && timingGapMs >= 60_000
+      ? opusDuration < deepseekDuration
+        ? "opus"
+        : "deepseek"
+      : "tie";
+  rows.push(
+    compareValues(
+      runSummary,
+      "work_time_cost",
+      "工作时间和过程成本",
+      "duration_ms、duration_api_ms、turns",
+      timeLeader,
+      timeLeader === "tie" ? "两边端到端耗时接近或差异不足 1 分钟" : `${timeLeader} 端到端耗时更短`,
+      {
+        opus: opus.trace.path,
+        deepseek: deepseek.trace.path
+      },
+      {
+        opus: {
+          duration_ms: opus.trace.durationMs,
+          duration_label: formatDurationMs(opus.trace.durationMs),
+          api_duration_ms: opus.trace.apiDurationMs,
+          api_duration_label: formatDurationMs(opus.trace.apiDurationMs),
+          turns: opus.trace.turns
+        },
+        deepseek: {
+          duration_ms: deepseek.trace.durationMs,
+          duration_label: formatDurationMs(deepseek.trace.durationMs),
+          api_duration_ms: deepseek.trace.apiDurationMs,
+          api_duration_label: formatDurationMs(deepseek.trace.apiDurationMs),
+          turns: deepseek.trace.turns
+        }
       }
     )
   );
@@ -887,7 +949,17 @@ function dimensionRows(summary) {
     execution: model.scores.tiers.executionQuality.label,
     risk: model.scores.tiers.riskControl.label,
     product: model.scores.tiers.productExpression.label,
-    key: `URL=${model.artifacts.research.urlCount}；错误=${model.trace.toolErrorCount}；安全=${model.artifacts.security.findings}`
+    key: `URL=${model.artifacts.research.urlCount}；错误=${model.trace.toolErrorCount}；安全=${model.artifacts.security.findings}；耗时=${formatDurationMs(model.trace.durationMs)}`
+  }));
+}
+
+function timingRows(summary) {
+  return summary.models.map((model) => ({
+    model: model.label,
+    duration: formatDurationMs(model.trace.durationMs),
+    apiDuration: formatDurationMs(model.trace.apiDurationMs),
+    turns: model.trace.turns ?? "n/a",
+    meaning: "端到端耗时包含模型思考、工具调用、provider 等待、检查和最终总结；API 耗时只作辅助参考。"
   }));
 }
 
@@ -922,6 +994,7 @@ function capabilityRows(summary) {
     row("Hook（钩子检查）", "收尾门禁", "hook events", (model) => `pass=${model.trace.stopHookPassCount}`),
     row("Security（安全检查）", "泄露风险", "security-check.json", (model) => `findings=${model.artifacts.security.findings}`),
     row("TTS（文字转语音）", "能力覆盖", "audio manifest / final manifest", (model) => `${model.artifacts.audioProvider.status}；fallback=${model.artifacts.audioProvider.fallback}`),
+    row("Work Time（工作时间）", "过程成本", "trace result", (model) => `${formatDurationMs(model.trace.durationMs)}；API=${formatDurationMs(model.trace.apiDurationMs)}`),
     row("Memory（长期记忆）", "长期上下文", "未纳入硬验收", () => "未纳入硬验收")
   ];
 }
@@ -952,6 +1025,18 @@ function renderRunReport(summary) {
       { label: "风险控制", value: (row) => row.risk },
       { label: "产品表达", value: (row) => row.product },
       { label: "关键指标", value: (row) => row.key }
+    ]),
+    "",
+    "## 工作时间 / 过程成本",
+    "",
+    "这里的工作时间取自 Claude Code trace（执行轨迹）最后的 `result.duration_ms`。它是端到端耗时，适合衡量一次 Agent 交付的过程成本；`duration_api_ms` 只作为模型 API 耗时参考。",
+    "",
+    mdTable(timingRows(summary), [
+      { label: "模型", value: (row) => row.model },
+      { label: "端到端耗时", value: (row) => row.duration },
+      { label: "API 耗时", value: (row) => row.apiDuration },
+      { label: "turns", value: (row) => row.turns },
+      { label: "口径", value: (row) => row.meaning }
     ]),
     "",
     "## 评测证据地图",
@@ -1017,6 +1102,11 @@ function aggregateModel(runSummaries, modelId) {
         final_video_duration: model.artifacts.finalVideo.durationSeconds,
         real_images: model.artifacts.realProvider.completedImages,
         tts_status: model.artifacts.audioProvider.status,
+        duration_ms: model.trace.durationMs,
+        duration_label: formatDurationMs(model.trace.durationMs),
+        api_duration_ms: model.trace.apiDurationMs,
+        api_duration_label: formatDurationMs(model.trace.apiDurationMs),
+        turns: model.trace.turns,
         final_summary_contradiction: model.trace.finalSummary.hasContradictionAboutVideo
       }
     };
@@ -1156,7 +1246,7 @@ function renderAggregateReport(aggregate) {
     execution: model.tiers.executionQuality.label,
     risk: model.tiers.riskControl.label,
     product: model.tiers.productExpression.label,
-    runs: model.perRun.map((item) => `${item.runId}: URL=${item.keyMetrics.research_urls}, errors=${item.keyMetrics.tool_errors}, TTS=${item.keyMetrics.tts_status}`).join("; ")
+    runs: model.perRun.map((item) => `${item.runId}: URL=${item.keyMetrics.research_urls}, errors=${item.keyMetrics.tool_errors}, time=${item.keyMetrics.duration_label}, TTS=${item.keyMetrics.tts_status}`).join("; ")
   }));
   return [
     `# Round 2 稳定性对照：${aggregate.runIds.join(" + ")}`,

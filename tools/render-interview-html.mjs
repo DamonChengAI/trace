@@ -51,6 +51,14 @@ function htmlTable(rows, columns) {
     </table>`;
 }
 
+function formatDurationMs(value) {
+  if (!Number.isFinite(Number(value))) return "n/a";
+  const totalSeconds = Math.round(Number(value) / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes > 0 ? `${minutes}m ${String(seconds).padStart(2, "0")}s` : `${seconds}s`;
+}
+
 function tierLabel(model, key) {
   return model.tiers?.[key]?.label || model.scores?.tiers?.[key]?.label || "n/a";
 }
@@ -66,7 +74,7 @@ function modelRows(metrics) {
       risk: tierLabel(model, "riskControl"),
       product: tierLabel(model, "productExpression"),
       key: model.perRun
-        .map((item) => `${item.runId}: URL=${item.keyMetrics.research_urls}, errors=${item.keyMetrics.tool_errors}, TTS=${item.keyMetrics.tts_status}`)
+        .map((item) => `${item.runId}: URL=${item.keyMetrics.research_urls}, errors=${item.keyMetrics.tool_errors}, time=${item.keyMetrics.duration_label || formatDurationMs(item.keyMetrics.duration_ms)}, TTS=${item.keyMetrics.tts_status}`)
         .join("; ")
     }));
   }
@@ -79,7 +87,7 @@ function modelRows(metrics) {
     execution: tierLabel(model, "executionQuality"),
     risk: tierLabel(model, "riskControl"),
     product: tierLabel(model, "productExpression"),
-    key: `URL=${model.artifacts.research.urlCount}; errors=${model.trace.toolErrorCount}; safety=${model.artifacts.security.findings}; TTS=${model.artifacts.audioProvider.status}`
+    key: `URL=${model.artifacts.research.urlCount}; errors=${model.trace.toolErrorCount}; safety=${model.artifacts.security.findings}; time=${formatDurationMs(model.trace.durationMs)}; TTS=${model.artifacts.audioProvider.status}`
   }));
 }
 
@@ -128,6 +136,30 @@ function evidenceRows(metrics) {
   );
 }
 
+function timingRows(metrics) {
+  const rows = [];
+  for (const model of metrics.models) {
+    if (metrics.kind === "stability-aggregate") {
+      rows.push({
+        model: model.label,
+        duration: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.duration_label || formatDurationMs(item.keyMetrics.duration_ms)}`).join("; "),
+        apiDuration: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.api_duration_label || formatDurationMs(item.keyMetrics.api_duration_ms)}`).join("; "),
+        turns: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.turns ?? "n/a"}`).join("; "),
+        meaning: "端到端耗时用于衡量一次 Agent 交付成本；API 耗时只作辅助参考。"
+      });
+    } else {
+      rows.push({
+        model: model.label,
+        duration: formatDurationMs(model.trace.durationMs),
+        apiDuration: formatDurationMs(model.trace.apiDurationMs),
+        turns: model.trace.turns ?? "n/a",
+        meaning: "端到端耗时包含模型思考、工具调用、provider 等待、检查和最终总结。"
+      });
+    }
+  }
+  return rows;
+}
+
 function capabilityRows(metrics) {
   const rows = [];
   const models = metrics.kind === "stability-aggregate" ? metrics.models : metrics.models;
@@ -140,7 +172,8 @@ function capabilityRows(metrics) {
         scripts: "见每轮 metrics.json",
         review: "hook / subagent 见每轮 metrics.json",
         safety: model.perRun.map((item) => `${item.runId}: findings=${item.keyMetrics.security_findings}`).join("; "),
-        tts: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.tts_status}`).join("; ")
+        tts: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.tts_status}`).join("; "),
+        workTime: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.duration_label || formatDurationMs(item.keyMetrics.duration_ms)}`).join("; ")
       });
     } else {
       rows.push({
@@ -150,7 +183,8 @@ function capabilityRows(metrics) {
         scripts: `${model.trace.scriptRuns.length} scripts`,
         review: `hook=${model.trace.stopHookPassCount}, subagent=${model.trace.subagents.join(", ") || "none"}`,
         safety: `findings=${model.artifacts.security.findings}`,
-        tts: `${model.artifacts.audioProvider.status}, fallback=${model.artifacts.audioProvider.fallback}`
+        tts: `${model.artifacts.audioProvider.status}, fallback=${model.artifacts.audioProvider.fallback}`,
+        workTime: `${formatDurationMs(model.trace.durationMs)}, API=${formatDurationMs(model.trace.apiDurationMs)}`
       });
     }
   }
@@ -201,6 +235,18 @@ function markdown(metrics) {
       { label: "关键指标", value: (row) => row.key }
     ]),
     "",
+    "## 工作时间 / 过程成本",
+    "",
+    "工作时间来自 trace（执行轨迹）最后的 `duration_ms`。它是端到端耗时，包含模型思考、工具调用、provider 等待、检查和最终总结；`duration_api_ms` 只作辅助参考。",
+    "",
+    mdTable(timingRows(metrics), [
+      { label: "模型", value: (row) => row.model },
+      { label: "端到端耗时", value: (row) => row.duration },
+      { label: "API 耗时", value: (row) => row.apiDuration },
+      { label: "turns", value: (row) => row.turns },
+      { label: "口径", value: (row) => row.meaning }
+    ]),
+    "",
     "## 稳定性 / 差异对照",
     "",
     mdTable(stabilityRows(metrics), [
@@ -220,7 +266,8 @@ function markdown(metrics) {
       { label: "Scripts（命令脚本）", value: (row) => row.scripts },
       { label: "Review（复核）", value: (row) => row.review },
       { label: "Security（安全）", value: (row) => row.safety },
-      { label: "TTS（文字转语音）", value: (row) => row.tts }
+      { label: "TTS（文字转语音）", value: (row) => row.tts },
+      { label: "Work Time（工作时间）", value: (row) => row.workTime }
     ]),
     "",
     "## 结论信源",
@@ -259,6 +306,13 @@ function html(metrics) {
     { label: "状态", value: (row) => row.status },
     { label: "写法", value: (row) => row.conclusion }
   ]);
+  const timingTable = htmlTable(timingRows(metrics), [
+    { label: "模型", value: (row) => row.model },
+    { label: "端到端耗时", value: (row) => row.duration },
+    { label: "API 耗时", value: (row) => row.apiDuration },
+    { label: "turns", value: (row) => row.turns },
+    { label: "口径", value: (row) => row.meaning }
+  ]);
   const capabilityTable = htmlTable(capabilityRows(metrics), [
     { label: "模型", value: (row) => row.model },
     { label: "Planning（任务规划）", value: (row) => row.planning },
@@ -266,7 +320,8 @@ function html(metrics) {
     { label: "Scripts（命令脚本）", value: (row) => row.scripts },
     { label: "Review（复核）", value: (row) => row.review },
     { label: "Security（安全）", value: (row) => row.safety },
-    { label: "TTS（文字转语音）", value: (row) => row.tts }
+    { label: "TTS（文字转语音）", value: (row) => row.tts },
+    { label: "Work Time（工作时间）", value: (row) => row.workTime }
   ]);
   const evidenceTable = htmlTable(evidenceRows(metrics), [
     { label: "结论", value: (row) => row.conclusion },
@@ -434,6 +489,7 @@ function html(metrics) {
         <span>
           <a href="#method">方法</a>
           <a href="#tiers">档位</a>
+          <a href="#timing">耗时</a>
           <a href="#stability">稳定性</a>
           <a href="#coverage">覆盖</a>
           <a href="#evidence">信源</a>
@@ -481,10 +537,18 @@ function html(metrics) {
       ${modelTable}
     </section>
 
+    <section id="timing">
+      <div class="sectionHead">
+        <h2>工作时间 / 过程成本</h2>
+        <p>端到端耗时取自 trace（执行轨迹）最后的 duration_ms，包含模型思考、工具调用、provider 等待、检查和最终总结。API 耗时只作辅助参考。</p>
+      </div>
+      ${timingTable}
+    </section>
+
     <section id="stability">
       <div class="sectionHead">
         <h2>稳定性对照</h2>
-        <p>两轮实验的目的不是做统计论文，而是看关键差异是否复现。稳定项进入结论，偶发项只做观察。</p>
+        <p>两轮实验用于确认关键差异是否复现。稳定项进入结论，偶发项只做观察。</p>
       </div>
       ${stabilityTable}
     </section>
