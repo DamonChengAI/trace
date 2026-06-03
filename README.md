@@ -58,7 +58,6 @@ raw trace 又长又技术，产品面试官没法直接读。三个工具把它�
 AGENTS.md     最高优先级目标与偏航检查（项目宪法）
 plans/        当前权威评测方案 round2-refined-eval-plan.md
 execution/    执行规范：task-prompt + dual-model-execution-runbook + rerun-contract
-interview/    作品结构 report-structure + 能力主表 eval-capability-matrix
 references/   背景原则（只作参考）
 tools/        grader 与校验工具（纯规则、零 LLM）
 runs/         一个完整代表性 run：双模型 raw trace + 产物 + 报告 + metrics
