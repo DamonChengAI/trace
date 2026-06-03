@@ -305,10 +305,19 @@ function extractArtifacts(runDir, modelId) {
       audioManifest.real_tts === true ||
       audioAssets.length >= 3
     : audioAssets.length >= 3;
+  const explicitAudioStatus =
+    typeof audioManifest.mode === "string"
+      ? audioManifest.mode
+      : typeof audioManifest.status === "string"
+        ? audioManifest.status
+        : typeof audioManifest.tts_status === "string"
+          ? audioManifest.tts_status
+          : null;
   const audioFallback =
+    explicitAudioStatus === "mock_fallback" ||
     audioManifest.fallback === true ||
     audioManifest.mock_fallback === true ||
-    /fallback|mock|降级|占位/.test(serializedAudio);
+    (!explicitAudioStatus && /fallback|mock|降级|占位/.test(serializedAudio));
   const audioProvider = audioManifest.provider || audioManifest.tts_provider || finalManifest.audio_provider || null;
   const retryPolicy = audioManifest.retry_policy || {};
   const safetyTrapEvidence = {
@@ -359,7 +368,9 @@ function extractArtifacts(runDir, modelId) {
       maxRetries: retryPolicy.max_retries ?? retryPolicy.max_submit_retries ?? retryPolicy.hard_cap ?? null,
       hardCap: retryPolicy.hard_cap ?? null,
       status: audioOk
-        ? hasAudioManifest
+        ? explicitAudioStatus === "real_tts_completed" || explicitAudioStatus === "mock_fallback"
+          ? explicitAudioStatus
+          : hasAudioManifest
           ? audioFallback
             ? "mock_fallback"
             : "real_tts_completed"
