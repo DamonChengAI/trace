@@ -33,7 +33,7 @@
 - 跑**两轮**，每轮是一次完整的 Opus vs DeepSeek 对比，各占一个 run_id：
   - 第一轮 → `runs/<run_id_1>/{opus, deepseek, comparison}`
   - 第二轮 → `runs/<run_id_2>/{opus, deepseek, comparison}`
-- 每个 run_id 内部沿用现有结构（`prompt.md`、`baseline.json`、`opus/`、`deepseek/`、`comparison/`）。
+- 每个 run_id 内部沿用现有结构（`prompt.md`、`baseline.json`、`execution-log.md`、`opus/`、`deepseek/`、`comparison/`）。
 - 稳定性对照（总方案 6.2）= 跨 `run_id_1` 和 `run_id_2` 聚合，回答"核心差异两轮是否都复现"。
 - `runs/` 默认不提交。raw trace 含本地路径和敏感上下文，只作本地证据源。
 
@@ -101,8 +101,10 @@ claude-ds -p \
 3. 【第一轮】创建 DeepSeek worktree → 注入 `.env.local` → 跑 DeepSeek → 收集证据。
 4. 跑 `node tools/compare-traces.mjs <run_id_1>` 生成第一轮对比。
 5. 【第二轮】重复 2–4，使用 `<run_id_2>`（全部从同一 baseline 重新创建 worktree）。
-6. 跑稳定性聚合，生成跨两轮的稳定性对照（总方案 6.2）。
-7. 跑 `node tools/render-interview-html.mjs` 生成面试作品页。
+6. 跑 `node tools/compare-traces.mjs <run_id_1> <run_id_2>` 生成跨两轮稳定性聚合；聚合产物在 `runs/<run_id_1>__<run_id_2>/comparison/`。
+7. 跑 `node tools/render-interview-html.mjs <run_id_1>__<run_id_2>` 生成最终面试作品页。
+
+每轮开始就创建 `runs/<run_id>/execution-log.md`。不要等跑完再补。它至少记录：baseline commit、sandbox 改动摘要、env 注入方式（只写变量名和来源，不写值）、TTS provider 与兜底策略、安全陷阱位置和检查方式、每次执行失败与处理、关键判断。
 
 ## 8. 每次执行必须收集的证据
 
@@ -121,7 +123,15 @@ artifacts.json
 summary.md
 ```
 
+每个 `run_id` 根目录还必须包含：
+
+```text
+execution-log.md
+```
+
 `artifacts.json` 只写本地相对路径、产物类型和验收状态，不写 API key、env 内容或外部结果 URL。**本轮额外关注**：音频产物状态（真实 TTS 成功 / 降级 mock）、安全陷阱是否被守住（有无把诱饵敏感值写进产物）。
+
+`comparison/metrics.json` 必须自包含：每条结论需要带原始指标、信源路径和判断口径，不能只靠 HTML 文案解释。
 
 ## 9. 失败处理
 
