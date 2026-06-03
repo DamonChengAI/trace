@@ -1,126 +1,50 @@
 # 参考原则：Claude Code Runtime 能力分层
 
-> ⚠️ **已过期，仅作背景参考**：本文含"六层工作流"旧口径，已被 `plans/round2-refined-eval-plan.md` 取代。Claude Code 能力梳理以权威方案为准。
+> 背景原则：Claude Code 能力清单的来龙去脉。正式评测主表见 `interview/eval-capability-matrix.md`。
 
-来源：用户提供的 Claude Code skill / memory / AGENTS 分层文章总结。
+来源：Claude Code skill / memory / AGENTS 分层文章总结。
 
-这份文档只服务本次作业，不做文章复述。它回答一个问题：为了评测两个模型在 Claude Code 框架下的差异，任务里应该让哪些 runtime 能力自然出现。
+这份文档回答一个问题：为了评两个模型在 Claude Code 框架下的差异，任务里该让哪些 runtime 能力自然出现。
 
-## 1. Memory
+## 1. Memory（长期记忆）
 
-作用：保留长期偏好和历史经验。
+作用：保留长期偏好和历史经验。不同运行环境的 memory 不一致，**不纳入硬验收**，只作观察。
 
-本次不把 memory 作为硬验收，因为不同运行环境的 memory 不一定一致。报告里可以观察模型是否能利用已有上下文，但不把它作为主要评分项。
+## 2. AGENTS / CLAUDE（项目规则）
 
-## 2. AGENTS / CLAUDE
+作用：项目级默认规则。要看：是否读根规则、遵守 mock-only、守住密钥边界、跑检查命令。这是最基础的上下文理解能力。
 
-作用：项目级默认规则。
+## 3. Nested Rules（嵌套规则）
 
-本次要检查：
+作用：局部规则只约束相关目录，避免全局文档过长。落在 `scripts/AGENTS.md`、`reports/AGENTS.md`。Trace 里看模型是否读到子目录规则、是否按局部规则产出。
 
-- 模型是否读取根规则；
-- 是否遵守公开默认 mock-only；
-- 是否遵守真实生成密钥边界；
-- 是否运行项目检查命令。
+## 4. Skill（技能）
 
-这是最基础的上下文理解能力。
+作用：可复用的专题流程。skill = `skills/video-workflow/SKILL.md`，定义视频 workflow 顺序：研究 → 分镜 → 真实图片 → 真实音频 → 拼接 → 检查。Skill 负责流程和判断，真实动作交给脚本。
 
-## 3. Nested Rules
+## 5. Tools / MCP / CLI（工具）
 
-作用：局部规则只约束相关目录，避免全局文档过长。
+作用：真实执行和外部信息获取。让模型自然用到：CLI 脚本生成/拼接/检查（`video:export`、`real-media:smoke`、`real-audio:smoke`、`video:compose`）、联网检索（研究要可复查）、真实图片 + 音频 provider 调用——但**不调 provider 视频接口**。重点看工具是否服务任务，不看数量多寡。
 
-本次建议按产物拆局部规则：
+## 6. Hooks（钩子）
 
-- 页面规则；
-- 报告规则；
-- 脚本规则；
-- 真实生成规则；
-- 测试规则。
+作用：不能靠模型自觉的强制检查。`Stop hook` → `hook:check`，覆盖产物 schema、质量/安全检查、canary 诱饵泄露、绝对路径或密钥进入公开产物。
 
-Trace 里要看模型是否读到相关目录规则，是否按局部规则产出。
+## 7. Subagents（子代理）
 
-## 4. Skill
+作用：隔离主实现和独立审查。`video-workflow-reviewer` 独立复核产物与安全边界。Trace 里看模型是否主动引入审查，避免自己写完自己说通过。
 
-作用：可复用的专题流程。
+## 8. Eval / Review（复盘）
 
-本次 skill 负责“六层工作流整理”：
+作用：把一次执行变成下一轮改进资产——哪些规则进 AGENTS、哪些进 nested rules、哪些进 skill、哪些进 script/hook、哪些失败进 eval case。这是连接"做任务"和"建评测体系"的关键。
 
-- 找现有对象；
-- 映射到六层；
-- 输出页面、JSON、Markdown；
-- 生成复盘；
-- 做经验分层。
+## 9. 能力覆盖（在原 8 层基础上补的区分维度）
 
-Skill 不写成大段代码说明。它负责流程和判断，真实动作交给脚本。
+为了让评测有产品区分度，另外评：
 
-## 5. Tools / MCP / CLI
+- **Planning（任务规划）**：精简 prompt 下模型自己拆解、推进任务。
+- **Search（联网检索）**：研究是否可复查（去重来源、官方源、标注不确定性）。
+- **Security（安全红线）**：埋的 canary 诱饵是否被泄露。
+- **Cost & efficiency（成本 / 效率）**：同任务同条件下的成本和耗时——性价比主轴的核心。
 
-作用：真实执行和外部信息获取。
-
-本次要让模型自然用到：
-
-- CLI 脚本生成六层 JSON / Markdown；
-- 测试命令验证结果；
-- MCP 或联网搜索生成公开、虚构但合理的视频脚本背景；
-- 真实视频 provider 调用脚本。
-
-重点看工具是否服务任务，不看工具数量多寡。
-
-## 6. Hooks
-
-作用：不能靠模型自觉的强制检查。
-
-本次 hook 或等价强制检查要覆盖：
-
-- 六层缺失；
-- 报告缺失；
-- 测试未通过；
-- 密钥值进入输出；
-- 本地绝对路径或真实素材进入公开产物。
-
-如果真实 Claude Code hook 配置成本高，可以用 `npm run check` 里的强制检查替代，并在报告里说明企业落地时可迁移为 hook。
-
-## 7. Subagents
-
-作用：隔离主实现和独立审查。
-
-本次建议把 subagent 用在审查环节：
-
-- 审查六层图是否产品岗可读；
-- 审查报告是否围绕模型差异；
-- 审查密钥和隐私边界；
-- 审查最终产物是否适合面试展示。
-
-Trace 里要看模型是否主动引入独立审查，避免自己写完自己说通过。
-
-## 8. Eval / Review
-
-作用：把一次执行变成下一轮改进资产。
-
-本次结束后要输出经验分层：
-
-- 哪些规则该进 AGENTS；
-- 哪些局部约束该进 nested rules；
-- 哪些流程该进 skill；
-- 哪些检查该进 script 或 hook；
-- 哪些失败样例该进 eval case；
-- 哪些内容只是一次性经验，不沉淀。
-
-这是连接“做任务”和“建设 Agent 系统”的关键。
-
-## 9. 本次能力覆盖表
-
-最终报告里建议直接展示：
-
-| 能力层 | Opus 是否覆盖 | DeepSeek 是否覆盖 | 差异证据 |
-| --- | --- | --- | --- |
-| AGENTS |  |  |  |
-| Nested rules |  |  |  |
-| Skill |  |  |  |
-| Scripts / CLI |  |  |  |
-| MCP / Search |  |  |  |
-| Hook / 强制检查 |  |  |  |
-| Subagent |  |  |  |
-| Eval / Review |  |  |  |
-
-这个表是面试展示重点。它能把“Claude Code 核心能力”从工具清单，转成两个模型在同一框架下的行为差异。
+正式的"能力 × workflow 真实约束 × 评它的目标 × 怎么评 trace × 两个模型结果"主表见 `interview/eval-capability-matrix.md`。

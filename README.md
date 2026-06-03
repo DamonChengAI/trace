@@ -18,7 +18,7 @@ execution/dual-model-execution-runbook.md
 
 ```text
 plans/      当前权威方案：round2-refined-eval-plan.md
-execution/  重跑契约 rerun-contract + task-prompt + runbook
+execution/  执行规范 rerun-contract + task-prompt + runbook
 interview/  作品结构 report-structure + 评测主表 eval-capability-matrix
 references/ 背景原则，只作参考
 ```

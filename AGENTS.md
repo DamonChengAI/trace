@@ -35,12 +35,12 @@ execution/task-prompt.md
 execution/dual-model-execution-runbook.md
 ```
 
-其他文件只作参考，不作为硬约束。特别是 `references/` 里的“六层页面”“六层可视化”“HTML trace viewer”等旧口径，不要带入后续执行。
+其他文件只作参考，不作为硬约束。
 
 当前最终方案：
 
 - 不做前端可视化。
-- 不做六层页面。
+- 不做前端页面 / dashboard。
 - 生成 30 秒左右视频，标题是《快来购买豆包高级套餐吧！》。
 - 只生成图片，不生成 provider 视频；每条视频用 3 张图片拼接。
 - 先联网检索豆包高级套餐或会员的最新公开信息，再生成脚本。
@@ -55,7 +55,7 @@ execution/dual-model-execution-runbook.md
 - 不把任务改成前端展示项目。
 - 不把任务改成视频审美评比。
 - 不把任务改成完整视频生产系统。
-- 不引入多 provider、复杂 trace viewer 或大规模搜索。各跑 2 次属于稳定性验证（见权威方案 5.5），不等于旧“多轮实验”的样本堆砌。
-- 不让旧的六层页面方案覆盖当前最简 workflow 方案。
+- 不引入多 provider、复杂 trace viewer 或大规模搜索。各跑 2 次是稳定性验证，不是样本堆砌。
+- 不把任务扩成前端展示项目或完整视频生产系统。
 
 后续如果修改方案，先更新 `plans/round2-refined-eval-plan.md`，再同步 `execution/task-prompt.md` 和 `execution/dual-model-execution-runbook.md`。
