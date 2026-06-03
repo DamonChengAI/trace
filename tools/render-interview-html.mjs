@@ -59,6 +59,11 @@ function formatDurationMs(value) {
   return minutes > 0 ? `${minutes}m ${String(seconds).padStart(2, "0")}s` : `${seconds}s`;
 }
 
+function formatCostUsd(value) {
+  if (!Number.isFinite(Number(value))) return "n/a";
+  return `$${Number(value).toFixed(2)}`;
+}
+
 function tierLabel(model, key) {
   return model.tiers?.[key]?.label || model.scores?.tiers?.[key]?.label || "n/a";
 }
@@ -74,7 +79,10 @@ function modelRows(metrics) {
       risk: tierLabel(model, "riskControl"),
       product: tierLabel(model, "productExpression"),
       key: model.perRun
-        .map((item) => `${item.runId}: URL=${item.keyMetrics.research_urls}, errors=${item.keyMetrics.tool_errors}, time=${item.keyMetrics.duration_label || formatDurationMs(item.keyMetrics.duration_ms)}, TTS=${item.keyMetrics.tts_status}`)
+        .map(
+          (item) =>
+            `${item.runId}: URL=${item.keyMetrics.research_urls}, errors=${item.keyMetrics.tool_errors}, time=${item.keyMetrics.duration_label || formatDurationMs(item.keyMetrics.duration_ms)}, cost=${item.keyMetrics.total_cost_label || formatCostUsd(item.keyMetrics.total_cost_usd)}, TTS=${item.keyMetrics.tts_status}`
+        )
         .join("; ")
     }));
   }
@@ -87,7 +95,7 @@ function modelRows(metrics) {
     execution: tierLabel(model, "executionQuality"),
     risk: tierLabel(model, "riskControl"),
     product: tierLabel(model, "productExpression"),
-    key: `URL=${model.artifacts.research.urlCount}; errors=${model.trace.toolErrorCount}; safety=${model.artifacts.security.findings}; time=${formatDurationMs(model.trace.durationMs)}; TTS=${model.artifacts.audioProvider.status}`
+    key: `URL=${model.artifacts.research.urlCount}; errors=${model.trace.toolErrorCount}; safety=${model.artifacts.security.findings}; time=${formatDurationMs(model.trace.durationMs)}; cost=${formatCostUsd(model.trace.totalCostUsd)}; TTS=${model.artifacts.audioProvider.status}`
   }));
 }
 
@@ -144,16 +152,18 @@ function timingRows(metrics) {
         model: model.label,
         duration: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.duration_label || formatDurationMs(item.keyMetrics.duration_ms)}`).join("; "),
         apiDuration: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.api_duration_label || formatDurationMs(item.keyMetrics.api_duration_ms)}`).join("; "),
+        cost: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.total_cost_label || formatCostUsd(item.keyMetrics.total_cost_usd)}`).join("; "),
         turns: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.turns ?? "n/a"}`).join("; "),
-        meaning: "端到端耗时用于衡量一次 Agent 交付成本；API 耗时只作辅助参考。"
+        meaning: "端到端耗时和运行成本用于衡量一次 Agent 交付成本；API 耗时只作辅助参考。"
       });
     } else {
       rows.push({
         model: model.label,
         duration: formatDurationMs(model.trace.durationMs),
         apiDuration: formatDurationMs(model.trace.apiDurationMs),
+        cost: formatCostUsd(model.trace.totalCostUsd),
         turns: model.trace.turns ?? "n/a",
-        meaning: "端到端耗时包含模型思考、工具调用、provider 等待、检查和最终总结。"
+        meaning: "端到端耗时包含模型思考、工具调用、provider 等待、检查和最终总结；成本来自 Claude Code result.total_cost_usd。"
       });
     }
   }
@@ -173,7 +183,7 @@ function capabilityRows(metrics) {
         review: "hook / subagent 见每轮 metrics.json",
         safety: model.perRun.map((item) => `${item.runId}: findings=${item.keyMetrics.security_findings}`).join("; "),
         tts: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.tts_status}`).join("; "),
-        workTime: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.duration_label || formatDurationMs(item.keyMetrics.duration_ms)}`).join("; ")
+        workTime: model.perRun.map((item) => `${item.runId}: ${item.keyMetrics.duration_label || formatDurationMs(item.keyMetrics.duration_ms)}, cost=${item.keyMetrics.total_cost_label || formatCostUsd(item.keyMetrics.total_cost_usd)}`).join("; ")
       });
     } else {
       rows.push({
@@ -184,7 +194,7 @@ function capabilityRows(metrics) {
         review: `hook=${model.trace.stopHookPassCount}, subagent=${model.trace.subagents.join(", ") || "none"}`,
         safety: `findings=${model.artifacts.security.findings}`,
         tts: `${model.artifacts.audioProvider.status}, fallback=${model.artifacts.audioProvider.fallback}`,
-        workTime: `${formatDurationMs(model.trace.durationMs)}, API=${formatDurationMs(model.trace.apiDurationMs)}`
+        workTime: `${formatDurationMs(model.trace.durationMs)}, API=${formatDurationMs(model.trace.apiDurationMs)}, cost=${formatCostUsd(model.trace.totalCostUsd)}`
       });
     }
   }
@@ -237,12 +247,13 @@ function markdown(metrics) {
     "",
     "## 工作时间 / 过程成本",
     "",
-    "工作时间来自 trace（执行轨迹）最后的 `duration_ms`。它是端到端耗时，包含模型思考、工具调用、provider 等待、检查和最终总结；`duration_api_ms` 只作辅助参考。",
+    "工作时间和运行成本来自 trace（执行轨迹）最后的 `duration_ms` / `total_cost_usd`。端到端耗时包含模型思考、工具调用、provider 等待、检查和最终总结；`duration_api_ms` 只作辅助参考。",
     "",
     mdTable(timingRows(metrics), [
       { label: "模型", value: (row) => row.model },
       { label: "端到端耗时", value: (row) => row.duration },
       { label: "API 耗时", value: (row) => row.apiDuration },
+      { label: "运行成本", value: (row) => row.cost },
       { label: "turns", value: (row) => row.turns },
       { label: "口径", value: (row) => row.meaning }
     ]),
@@ -310,6 +321,7 @@ function html(metrics) {
     { label: "模型", value: (row) => row.model },
     { label: "端到端耗时", value: (row) => row.duration },
     { label: "API 耗时", value: (row) => row.apiDuration },
+    { label: "运行成本", value: (row) => row.cost },
     { label: "turns", value: (row) => row.turns },
     { label: "口径", value: (row) => row.meaning }
   ]);
@@ -540,7 +552,7 @@ function html(metrics) {
     <section id="timing">
       <div class="sectionHead">
         <h2>工作时间 / 过程成本</h2>
-        <p>端到端耗时取自 trace（执行轨迹）最后的 duration_ms，包含模型思考、工具调用、provider 等待、检查和最终总结。API 耗时只作辅助参考。</p>
+        <p>端到端耗时和运行成本取自 trace（执行轨迹）最后的 duration_ms / total_cost_usd。API 耗时只作辅助参考。</p>
       </div>
       ${timingTable}
     </section>

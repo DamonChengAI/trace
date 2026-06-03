@@ -110,6 +110,34 @@ function formatDurationMs(value) {
   return minutes > 0 ? `${minutes}m ${String(seconds).padStart(2, "0")}s` : `${seconds}s`;
 }
 
+function formatCostUsd(value) {
+  if (!Number.isFinite(Number(value))) return "n/a";
+  return `$${Number(value).toFixed(2)}`;
+}
+
+function normalizeUrl(value) {
+  try {
+    const trimmed = String(value ?? "")
+      .trim()
+      .replace(/^[`"'([{<]+/g, "")
+      .replace(/[`"'，。、；;:,)）\]}>\s]+$/g, "");
+    if (!trimmed) return null;
+    const url = new URL(trimmed);
+    url.hash = "";
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
+}
+
+function extractSourceUrls(text) {
+  return unique(
+    [...String(text).matchAll(/https?:\/\/[^\s`"'，、；;<>()[\]{}]+/g)]
+      .map((match) => normalizeUrl(match[0]))
+      .filter(Boolean)
+  );
+}
+
 function normalizeErrorText(value) {
   return sanitizeForReport(value).replace(/\s+/g, " ").replace(/^Error:\s*/, "").trim();
 }
@@ -171,6 +199,8 @@ function extractTrace(runDir, modelId) {
   const readPaths = [];
   const writePaths = [];
   const editPaths = [];
+  const toolUsesById = new Map();
+  const toolResultsById = new Map();
   const taskCreates = [];
   const taskUpdates = [];
   const subagents = new Set();
@@ -189,14 +219,15 @@ function extractTrace(runDir, modelId) {
       if (node.type === "tool_use" && node.name) {
         toolCounts[node.name] = (toolCounts[node.name] || 0) + 1;
         const input = node.input || {};
+        if (node.id) toolUsesById.set(node.id, { name: node.name, input });
         if (node.name === "Bash" && input.command) bashCommands.push(input.command);
-        if (node.name === "Read" && input.file_path) readPaths.push(input.file_path);
-        if (node.name === "Write" && input.file_path) writePaths.push(input.file_path);
-        if (node.name === "Edit" && input.file_path) editPaths.push(input.file_path);
         if (node.name === "TaskCreate") taskCreates.push(input.subject || input.description || "");
         if (node.name === "TaskUpdate") taskUpdates.push(String(input.taskId || ""));
       }
-      if (node.type === "tool_result" && node.is_error) toolErrors.push(node.content || "tool_result_error");
+      if (node.type === "tool_result") {
+        if (node.tool_use_id) toolResultsById.set(node.tool_use_id, node);
+        if (node.is_error) toolErrors.push(node.content || "tool_result_error");
+      }
     });
     if (typeof event.tool_use_result === "string" && /Error:|Exit code 1|is_error/i.test(event.tool_use_result)) {
       toolErrors.push(event.tool_use_result.slice(0, 500));
@@ -204,6 +235,17 @@ function extractTrace(runDir, modelId) {
   }
 
   const commandCorpus = `${bashCommands.join("\n")}\n${commandText}`;
+  const failedReadPaths = [];
+  for (const [toolUseId, toolUse] of toolUsesById.entries()) {
+    const resultForTool = toolResultsById.get(toolUseId);
+    const failed = resultForTool?.is_error === true;
+    if (toolUse.name === "Read" && toolUse.input.file_path) {
+      if (failed) failedReadPaths.push(toolUse.input.file_path);
+      else readPaths.push(toolUse.input.file_path);
+    }
+    if (toolUse.name === "Write" && toolUse.input.file_path && !failed) writePaths.push(toolUse.input.file_path);
+    if (toolUse.name === "Edit" && toolUse.input.file_path && !failed) editPaths.push(toolUse.input.file_path);
+  }
   const scriptRuns = unique([...commandCorpus.matchAll(/npm run ([a-z0-9:.-]+)/gi)].map((match) => match[1]));
   const strictCheckRan = /REQUIRE_REAL_IMAGES=1[\s\S]*REQUIRE_RESEARCH=1[\s\S]*video:check|REQUIRE_RESEARCH=1[\s\S]*REQUIRE_REAL_IMAGES=1[\s\S]*video:check/.test(commandCorpus);
   const fullCheckRan = /npm run check\b/.test(commandCorpus);
@@ -237,6 +279,7 @@ function extractTrace(runDir, modelId) {
     strictCheckRan,
     fullCheckRan,
     readPaths: unique(readPaths.map(sanitizeForReport)),
+    failedReadPaths: unique(failedReadPaths.map(sanitizeForReport)),
     writePaths: unique(writePaths.map(sanitizeForReport)),
     editPaths: unique(editPaths.map(sanitizeForReport)),
     taskCreates: taskCreates.map(sanitizeForReport),
@@ -297,7 +340,7 @@ function extractArtifacts(runDir, modelId) {
   const attempts = Array.isArray(realManifest.attempts) ? realManifest.attempts : [];
   const maxPollRound = attempts.reduce((max, item) => Math.max(max, Number(item.poll_round || 0)), 0);
   const submitFailures = attempts.filter((item) => item.phase === "submit" && item.ok === false).length;
-  const sourceUrls = unique([...researchText.matchAll(/https?:\/\/[^\s)）\]}]+/g)].map((match) => sanitizeForReport(match[0])));
+  const sourceUrls = extractSourceUrls(researchText).map(sanitizeForReport);
   const sourceNameCount = countMatches(researchText, /报道|来源|source|官方|腾讯|36氪|证券时报|光明网|新浪|TechNode|China Daily|KuCoin|钛媒体|字节|豆包/g);
   const uncertaintyMarkers = countMatches(researchText, /以官方|不确定|测试中|公开报道未|为准|可能|截至/g);
   const serializedTask = JSON.stringify(taskRun);
@@ -612,13 +655,15 @@ function buildEvidence(modelId, trace, artifacts) {
     "process.work_time",
     "Process Cost（过程成本）",
     "neutral",
-    `端到端耗时 ${formatDurationMs(trace.durationMs)}，API 耗时 ${formatDurationMs(trace.apiDurationMs)}，turns=${trace.turns ?? "unknown"}。`,
+    `端到端耗时 ${formatDurationMs(trace.durationMs)}，API 耗时 ${formatDurationMs(trace.apiDurationMs)}，成本 ${formatCostUsd(trace.totalCostUsd)}，turns=${trace.turns ?? "unknown"}。`,
     trace.path,
     {
       duration_ms: trace.durationMs,
       duration_label: formatDurationMs(trace.durationMs),
       api_duration_ms: trace.apiDurationMs,
       api_duration_label: formatDurationMs(trace.apiDurationMs),
+      total_cost_usd: trace.totalCostUsd,
+      total_cost_label: formatCostUsd(trace.totalCostUsd),
       turns: trace.turns
     }
   );
@@ -705,7 +750,11 @@ function singleRunSignals(runSummary) {
   const opusErrorLoad = opus.trace.severeErrorCount * 3 + opus.trace.minorErrorCount;
   const deepseekErrorLoad = deepseek.trace.severeErrorCount * 3 + deepseek.trace.minorErrorCount;
   const executionLeader =
-    opusErrorLoad + 1 < deepseekErrorLoad ? "opus" : deepseekErrorLoad + 1 < opusErrorLoad ? "deepseek" : "tie";
+    opusErrorLoad + 1 < deepseekErrorLoad || opus.trace.toolErrorCount + 2 < deepseek.trace.toolErrorCount
+      ? "opus"
+      : deepseekErrorLoad + 1 < opusErrorLoad || deepseek.trace.toolErrorCount + 2 < opus.trace.toolErrorCount
+        ? "deepseek"
+        : "tie";
   rows.push(
     compareValues(
       runSummary,
@@ -764,9 +813,18 @@ function singleRunSignals(runSummary) {
 
   const opusDuration = Number(opus.trace.durationMs || 0);
   const deepseekDuration = Number(deepseek.trace.durationMs || 0);
+  const opusCost = Number(opus.trace.totalCostUsd || 0);
+  const deepseekCost = Number(deepseek.trace.totalCostUsd || 0);
   const timingGapMs = Math.abs(opusDuration - deepseekDuration);
+  const costGapUsd = Math.abs(opusCost - deepseekCost);
   const timeLeader =
-    opusDuration > 0 && deepseekDuration > 0 && timingGapMs >= 60_000
+    opusDuration > 0 &&
+    deepseekDuration > 0 &&
+    opusCost > 0 &&
+    deepseekCost > 0 &&
+    timingGapMs >= 60_000 &&
+    costGapUsd >= 0.5 &&
+    ((opusDuration < deepseekDuration && opusCost < deepseekCost) || (deepseekDuration < opusDuration && deepseekCost < opusCost))
       ? opusDuration < deepseekDuration
         ? "opus"
         : "deepseek"
@@ -775,10 +833,10 @@ function singleRunSignals(runSummary) {
     compareValues(
       runSummary,
       "work_time_cost",
-      "工作时间和过程成本",
-      "duration_ms、duration_api_ms、turns",
+      "工作时间和运行成本",
+      "duration_ms、duration_api_ms、total_cost_usd、turns",
       timeLeader,
-      timeLeader === "tie" ? "两边端到端耗时接近或差异不足 1 分钟" : `${timeLeader} 端到端耗时更短`,
+      timeLeader === "tie" ? "两边速度和成本没有形成同向明显优势" : `${timeLeader} 更快且运行成本更低`,
       {
         opus: opus.trace.path,
         deepseek: deepseek.trace.path
@@ -789,6 +847,8 @@ function singleRunSignals(runSummary) {
           duration_label: formatDurationMs(opus.trace.durationMs),
           api_duration_ms: opus.trace.apiDurationMs,
           api_duration_label: formatDurationMs(opus.trace.apiDurationMs),
+          total_cost_usd: opus.trace.totalCostUsd,
+          total_cost_label: formatCostUsd(opus.trace.totalCostUsd),
           turns: opus.trace.turns
         },
         deepseek: {
@@ -796,6 +856,8 @@ function singleRunSignals(runSummary) {
           duration_label: formatDurationMs(deepseek.trace.durationMs),
           api_duration_ms: deepseek.trace.apiDurationMs,
           api_duration_label: formatDurationMs(deepseek.trace.apiDurationMs),
+          total_cost_usd: deepseek.trace.totalCostUsd,
+          total_cost_label: formatCostUsd(deepseek.trace.totalCostUsd),
           turns: deepseek.trace.turns
         }
       }
@@ -903,12 +965,17 @@ function compareModels(runSummary) {
   const leader = sorted[0];
   const promoted = signals.filter((signal) => signal.leader === leader.id).slice(0, 3);
   const outcomeTie = signals.find((signal) => signal.id === "outcome_delivery")?.leader === "tie";
+  const costSignal = signals.find((signal) => signal.id === "work_time_cost");
+  const crossTradeoff = outcomeTie && costSignal && costSignal.leader !== "tie" && costSignal.leader !== leader.id;
+  const productConclusion = crossTradeoff
+    ? `这一轮没有形成单一赢家。两边最终产物同档达标；${leader.label} 在${promoted.map((item) => item.label).join("、") || "过程质量"}上更强，${models.find((model) => model.id === costSignal.leader)?.label || costSignal.leader} 在工作时间和运行成本上更有优势。当前应写成质量 / 可审计性 vs 速度 / 成本的权衡，等待第二轮确认。`
+    : `${leader.label} 在本轮更适合作为高可靠 Agent（智能体）基线候选。${outcomeTie ? "两边最终产物同档达标，" : ""}关键差异来自过程证据：${promoted.map((item) => item.label).join("、") || "执行质量"}。`;
   return {
     mode: "single_run",
     leader: leader.id,
     leaderLabel: leader.label,
     decisionLevel: "单轮观察，等待第二轮稳定性确认",
-    productConclusion: `${leader.label} 在本轮更适合作为高可靠 Agent（智能体）基线候选。${outcomeTie ? "两边最终产物同档达标，" : ""}关键差异来自过程证据：${promoted.map((item) => item.label).join("、") || "执行质量"}。`,
+    productConclusion,
     harnessImplication:
       "这个受控 workflow（工作流）把结果、过程、风险和表达拆开看。面试里应把它讲成一套可复用的评测方法，再用 Opus / DeepSeek 作为第一组验证案例。",
     keyFindings: signals
@@ -949,7 +1016,7 @@ function dimensionRows(summary) {
     execution: model.scores.tiers.executionQuality.label,
     risk: model.scores.tiers.riskControl.label,
     product: model.scores.tiers.productExpression.label,
-    key: `URL=${model.artifacts.research.urlCount}；错误=${model.trace.toolErrorCount}；安全=${model.artifacts.security.findings}；耗时=${formatDurationMs(model.trace.durationMs)}`
+    key: `URL=${model.artifacts.research.urlCount}；错误=${model.trace.toolErrorCount}；安全=${model.artifacts.security.findings}；耗时=${formatDurationMs(model.trace.durationMs)}；成本=${formatCostUsd(model.trace.totalCostUsd)}`
   }));
 }
 
@@ -958,8 +1025,9 @@ function timingRows(summary) {
     model: model.label,
     duration: formatDurationMs(model.trace.durationMs),
     apiDuration: formatDurationMs(model.trace.apiDurationMs),
+    cost: formatCostUsd(model.trace.totalCostUsd),
     turns: model.trace.turns ?? "n/a",
-    meaning: "端到端耗时包含模型思考、工具调用、provider 等待、检查和最终总结；API 耗时只作辅助参考。"
+    meaning: "端到端耗时包含模型思考、工具调用、provider 等待、检查和最终总结；成本来自 Claude Code result.total_cost_usd。"
   }));
 }
 
@@ -994,7 +1062,7 @@ function capabilityRows(summary) {
     row("Hook（钩子检查）", "收尾门禁", "hook events", (model) => `pass=${model.trace.stopHookPassCount}`),
     row("Security（安全检查）", "泄露风险", "security-check.json", (model) => `findings=${model.artifacts.security.findings}`),
     row("TTS（文字转语音）", "能力覆盖", "audio manifest / final manifest", (model) => `${model.artifacts.audioProvider.status}；fallback=${model.artifacts.audioProvider.fallback}`),
-    row("Work Time（工作时间）", "过程成本", "trace result", (model) => `${formatDurationMs(model.trace.durationMs)}；API=${formatDurationMs(model.trace.apiDurationMs)}`),
+    row("Work Time（工作时间）", "过程成本", "trace result", (model) => `${formatDurationMs(model.trace.durationMs)}；API=${formatDurationMs(model.trace.apiDurationMs)}；cost=${formatCostUsd(model.trace.totalCostUsd)}`),
     row("Memory（长期记忆）", "长期上下文", "未纳入硬验收", () => "未纳入硬验收")
   ];
 }
@@ -1029,12 +1097,13 @@ function renderRunReport(summary) {
     "",
     "## 工作时间 / 过程成本",
     "",
-    "这里的工作时间取自 Claude Code trace（执行轨迹）最后的 `result.duration_ms`。它是端到端耗时，适合衡量一次 Agent 交付的过程成本；`duration_api_ms` 只作为模型 API 耗时参考。",
+    "这里的工作时间和运行成本取自 Claude Code trace（执行轨迹）最后的 `result.duration_ms` / `result.total_cost_usd`。端到端耗时适合衡量一次 Agent 交付的过程成本；`duration_api_ms` 只作为模型 API 耗时参考。",
     "",
     mdTable(timingRows(summary), [
       { label: "模型", value: (row) => row.model },
       { label: "端到端耗时", value: (row) => row.duration },
       { label: "API 耗时", value: (row) => row.apiDuration },
+      { label: "运行成本", value: (row) => row.cost },
       { label: "turns", value: (row) => row.turns },
       { label: "口径", value: (row) => row.meaning }
     ]),
@@ -1106,6 +1175,8 @@ function aggregateModel(runSummaries, modelId) {
         duration_label: formatDurationMs(model.trace.durationMs),
         api_duration_ms: model.trace.apiDurationMs,
         api_duration_label: formatDurationMs(model.trace.apiDurationMs),
+        total_cost_usd: model.trace.totalCostUsd,
+        total_cost_label: formatCostUsd(model.trace.totalCostUsd),
         turns: model.trace.turns,
         final_summary_contradiction: model.trace.finalSummary.hasContradictionAboutVideo
       }
@@ -1246,7 +1317,7 @@ function renderAggregateReport(aggregate) {
     execution: model.tiers.executionQuality.label,
     risk: model.tiers.riskControl.label,
     product: model.tiers.productExpression.label,
-    runs: model.perRun.map((item) => `${item.runId}: URL=${item.keyMetrics.research_urls}, errors=${item.keyMetrics.tool_errors}, time=${item.keyMetrics.duration_label}, TTS=${item.keyMetrics.tts_status}`).join("; ")
+    runs: model.perRun.map((item) => `${item.runId}: URL=${item.keyMetrics.research_urls}, errors=${item.keyMetrics.tool_errors}, time=${item.keyMetrics.duration_label}, cost=${item.keyMetrics.total_cost_label}, TTS=${item.keyMetrics.tts_status}`).join("; ")
   }));
   return [
     `# Round 2 稳定性对照：${aggregate.runIds.join(" + ")}`,

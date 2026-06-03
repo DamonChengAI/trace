@@ -108,7 +108,8 @@ v1 运行：`runs/20260603-004012/`，Opus vs DeepSeek 各跑一次（详细 pro
 - **做什么**：
   1. 在 sandbox `AGENTS.md` / `skills/video-workflow/SKILL.md` 里**显式写明每个产物的结构要求**（例如 `media-manifest.json` 必须含 `media_tasks` 数组及必需字段；`final-video-manifest.json` 必须含哪些字段）。依据：v1 中 DeepSeek 因手写 manifest 结构和 `render-video-run-report.ts` 期望不一致而报 schema 错误——结构是隐含的，所以那次扣分归因不清。**显式化后：踩坑=真模型问题，不踩=真能力。**
   2. 把"研究结论要**可复查**"写成验收标准——但**只写"可复查"这个标准，不教"贴 URL"这个手段**。这样"会不会做到可复查"本身仍是差异点（v1 中 Opus 留了 6 个 URL、DeepSeek 留了 0 个），同时扣分有据可依。
-  3. 检查命令（`npm run check` / `video:check` 等）维持为硬门禁。
+  3. 把硬字幕纳入 outcome（最终产物）门槛：最终 `final-video.mp4` 必须烧录来自 storyboard 旁白的字幕；字幕时间线必须复用 ffprobe 读取到的真实音频时长；`video:check` 要校验 SRT、字幕图片、文本一致性和时间线对齐。这里锁的是"最终视频必须可直接看到字幕"这个验收标准，不把字幕生成步骤写进 task prompt。
+  4. 检查命令（`npm run check` / `video:check` 等）维持为硬门禁。
 - **关键原则**：只锁验收标准，不锁实现路径（原则 3）。**不要**把"先做什么、用哪个 skill"写进规则，否则又变成喂答案。
 
 ### 5.3 音频接入（改 sandbox）——用户已拍板加入对比
@@ -187,28 +188,29 @@ v1 运行：`runs/20260603-004012/`，Opus vs DeepSeek 各跑一次（详细 pro
 - **T2【sandbox】显式化产物 schema** 到 `AGENTS.md`/`SKILL.md`。验收：`media-manifest.json` 等关键产物的结构与必需字段被明确写出；`render-video-run-report.ts` 对合规输入不再因结构猜测而报错。
 - **T3【sandbox】把"研究结论要可复查"写成验收标准**（不教贴 URL）。验收：规则里有"可复查"要求，但无"必须贴 URL"的手段指令。
 - **T4【sandbox】接入真实 TTS 音频**，满足 5.3 的 4 条（mock 兜底、能力覆盖定位、脱敏、重试≤30）。验收：真实 TTS 失败时 workflow 仍跑完并产出占位音轨；产物/trace 无 key/路径泄露。
-- **T5【sandbox】埋 1 个安全陷阱**，满足 5.4。验收：诱饵对两模型对称、自然；`security-check.ts` 能在泄露时报出。**不**埋失败点。
+- **T5【sandbox】补硬字幕门槛**，满足 5.2 的字幕验收。验收：`video:compose` 生成 SRT 和字幕图片并烧录进 `final-video.mp4`；`video:check` 校验字幕文本与 storyboard 旁白一致、字幕时间线与音频一致。
+- **T6【sandbox】埋 1 个安全陷阱**，满足 5.4。验收：诱饵对两模型对称、自然；`security-check.ts` 能在泄露时报出。**不**埋失败点。
 
 ### 阶段二 · 执行
-- **T6【doubao】更新 `execution/dual-model-execution-runbook.md`**：模型表保留 Opus/DeepSeek 两组但每组跑 2 次；执行顺序改为 4 次串行；证据采集补充音频与安全陷阱相关项。
-- **T7【执行】各跑 2 次共 4 个 run**，遵守 5.5 控制条件，采齐证据。验收：4 个 run 目录完整、隔离、互不可见。
+- **T7【doubao】更新 `execution/dual-model-execution-runbook.md`**：模型表保留 Opus/DeepSeek 两组但每组跑 2 次；执行顺序改为 4 次串行；证据采集补充音频、硬字幕与安全陷阱相关项。
+- **T8【执行】各跑 2 次共 4 个 run**，遵守 5.5 控制条件，采齐证据。验收：4 个 run 目录完整、隔离、互不可见。
 
 ### 阶段三 · 分析
-- **T8【doubao】改 `tools/compare-traces.mjs`**：支持 n=2、去伪精确总分→档位、修归因口径、维度对齐前置标准（6.1）。
-- **T9【doubao】新增稳定性对照表**逻辑与产出（6.2）。
+- **T9【doubao】改 `tools/compare-traces.mjs`**：支持 n=2、去伪精确总分→档位、修归因口径、维度对齐前置标准（6.1）。
+- **T10【doubao】新增稳定性对照表**逻辑与产出（6.2）。
 - **验收**：运行 `node tools/compare-traces.mjs <run_id>` 产出含稳定性对照、档位结论、干净归因的 `metrics.json` + `report.md`。
 
 ### 阶段四 · 呈现
-- **T10【doubao】改 `tools/render-interview-html.mjs`**：hero 上浮到"评测方法"、加置信度标注、音频按"能力覆盖"叙事、数字一致、能力覆盖表补"规划质量"（6.3/6.4）。验收：HTML/MD 开篇是产品判断；术语带括注；无伪精确总分;音频不讲"更完整"。
+- **T11【doubao】改 `tools/render-interview-html.mjs`**：hero 上浮到"评测方法"、加置信度标注、音频按"能力覆盖"叙事、数字一致、能力覆盖表补"规划质量"（6.3/6.4）。验收：HTML/MD 开篇是产品判断；术语带括注；无伪精确总分;音频不讲"更完整"。
 
 ### 阶段五 · 质检
-- **T11【doubao】跑完自查**：三处表格数字一致；每条结论可反查信源且归因干净；无 outcome 观感混入；偶发差异标“待观察”。
+- **T12【doubao】跑完自查**：三处表格数字一致；每条结论可反查信源且归因干净；无 outcome 观感混入；偶发差异标“待观察”。
 
 ---
 
 ## 8. 总验收清单（怎么算做完了）
 - [ ] task-prompt 精简到"目标+约束+边界"，不喂步骤。
-- [ ] sandbox：产物 schema 显式化、研究"可复查"标准、真实 TTS（带 mock 兜底）、1 个对称安全陷阱。
+- [ ] sandbox：产物 schema 显式化、研究"可复查"标准、真实 TTS（带 mock 兜底）、硬字幕门槛、1 个对称安全陷阱。
 - [ ] 4 个 run（Opus×2、DeepSeek×2）采集完整、条件受控。
 - [ ] 工具支持 n=2，输出稳定性对照表，去伪精确总分，归因口径修正。
 - [ ] 作品 hero 是"可复用评测方法"，含置信度标注，音频讲"能力覆盖"不讲"完整度"，数字一致。

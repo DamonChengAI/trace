@@ -17,9 +17,9 @@ execution/dual-model-execution-runbook.md
 ## 目录
 
 ```text
-plans/      当前权威方案：round2-refined-eval-plan.md（其余为历史作废）
-execution/  双模型执行 prompt 和 runbook
-interview/  面试讲解稿
+plans/      当前权威方案：round2-refined-eval-plan.md
+execution/  重跑契约 rerun-contract + task-prompt + runbook
+interview/  作品结构 report-structure + 评测主表 eval-capability-matrix
 references/ 背景原则，只作参考
 ```
 
