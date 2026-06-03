@@ -1,76 +1,69 @@
-# 豆包 Agent 生产力评测 · Doubao Agent Eval
+# 豆包 Agent 生产力评测 · Trace Grader(轨迹评测工具)
 
-> 一个轻量评测工具 + 方法：用同一个「30 秒视频生成」任务当**统一考场**，比较 **Opus** 与 **DeepSeek** 在 Claude Code 里完成任务的**执行轨迹（trace，执行轨迹）差异**，再把 trace 转成产品 / 业务能直接读的**选型判断**。
+> 把 Agent(智能体)在 Claude Code 里执行任务的**原始轨迹(trace,执行轨迹)**,用**纯规则程序**压成可比、可复现、可反查的指标。
 >
-> 面向**豆包 Agent 生产力评测产品岗**的面试作品。最高优先级目标见 [AGENTS.md](AGENTS.md)。
+> **本仓库是评测工具的代码 + 一份执行样例。** 完整评测方案、三轮数据与选型结论见面试讲解材料,不在此重复。
 
 ---
 
-## TL;DR — 一轮干净对比的诚实结论
+## 工具解决什么问题
 
-两个模型都交付了视频：3 张真实图片 + 3 段真实 `TTS`（文字转语音）拼片、硬字幕烧录、**55/55 质量检查全过、4/4 门禁一次通过、0 安全泄露**，并且都从一个注入的失败里自己恢复了。**门槛层面两边都过关，差异在过程画像：**
+一份原始执行轨迹又长又技术,产品同学没法直接读。三个纯规则小程序把它压成"能看懂的证据、档位、结论"——**不拿 AI 当裁判**:同一份记录跑十遍结果完全一样,每个数都能反查到出处。
 
-| 维度 | Opus | DeepSeek |
+## 三个工具
+
+| 程序 | 角色 | 怎么干 |
 |---|---|---|
-| 研究可审计性 | **7** 个去重来源域名 | 5 个 |
-| 执行干净度 | **0** 工具错误 | 4 个（2 轻微） |
-| 速度 | 12m25s | **10m23s（快约 16%）** |
-| 成本 | $4.64 / run | **$4.20（省约 10%）** |
-| 时长控制 | 32.88s | **30.00s（精确达标）** |
+| [`tools/check-sandbox-baseline.mjs`](tools/check-sandbox-baseline.mjs) | 公平性校验 | 开跑前扫"考场",确认没夹带评测文件与评分标准,防被测模型偷看(防泄题) |
+| [`tools/compare-traces.mjs`](tools/compare-traces.mjs) | grader(评测器) | 读 `trace` + 各 `manifest`(产物清单),用**计数与正则**抽信号 → **写死规则**打档 → 输出 `metrics.json` + `report.md` |
+| [`tools/render-interview-html.mjs`](tools/render-interview-html.mjs) | 展示器(备用) | 读 `metrics.json` 套模板渲染 HTML;叙事由人写,工具版仅作数据对照 |
 
-**选型建议：** 关键 / 研究严谨 / 低容错任务 → **Opus**；规模化 / 成本速度敏感 / 流程清晰任务 → **DeepSeek**。
-**边界（诚实标注）：** 单轮观察（n=1），差距温和，只能作为信号、不是定论，需第二轮确认是否复现。
+## 为什么坚持纯规则、不用 LLM 当裁判
 
-📄 **完整报告**（先产品结论、后技术证据）→ [runs/20260603-182255/interview-review.md](runs/20260603-182255/interview-review.md)
+同一份 trace 跑十遍结果完全一样,每个档位都能反查到**哪条规则、哪个字段**算出来的。这避免了"用一个 AI 主观评判另一个 AI"的不可复现问题。**客观 = 标准人定、数据机器从轨迹自动抽,不是拍脑袋打分。**
 
----
+## 一套引擎 + 一个适配器(可复用性)
 
-## 为什么这么评
+工具天生分两层。换一个 Claude Code 任务来评,**引擎层一行不动,只换适配层**——交付的是一套能持续用的评测方法,不是"这次谁赢"的一次性答案。
 
-把生产力任务托付给 Agent（智能体），风险从来不在"它能不能做出一个视频"，而在过程：有没有读懂项目规则、会不会复用现成 `workflow`（工作流）、失败后能不能自己爬起来、安全边界守不守得住、人工要盯多紧。**所以不评最终视频好不好看，评 trace 暴露出的过程差异**——这才是决定"能不能规模化托付"的东西。视频只是统一任务载体。
+- **可复用引擎层(换任务不动):** 读执行记录、数工具调用 / 文件读写 / 复核 / 检查、成本重算、错误分级、一次通过率、脱敏、打档映射、多轮稳定性聚合、渲染外壳。
+- **任务适配层(换任务才改):** 验收标准、各 manifest 字段、脚本名、官方来源判定、安全诱饵——全集中在 [`compare-traces.mjs`](tools/compare-traces.mjs) 顶部的 `TASK_PROFILE` 与 `PRICE_TABLE` 两个配置里,换任务只动这两块。
 
-## 怎么评（受控方法）
+## 工具吃的原始数据长什么样
 
-同一个视频 workflow 当统一考场，锁四个变量：
+执行记录就是一行行 JSON,每行是模型的一个动作或一个结果(已脱敏):
 
-- **同一份精简 prompt** — 只给目标和边界，不喂步骤、不点名工具，看模型自己读懂项目。
-- **同一 sandbox baseline** — 跑前用 [`check-sandbox-baseline.mjs`](tools/check-sandbox-baseline.mjs) 校验不含评测文件，**防泄题**。
-- **同一工具边界与检查命令**。
-- **隔离 worktree** — 后跑的看不到先跑的。
+```jsonl
+{"type":"tool_use","name":"Bash","input":{"command":"npm run video:compose"}}
+{"type":"tool_result","is_error":true,"content":"ffmpeg ... Exit code 1"}
+{"type":"tool_use","name":"WebSearch","input":{"query":"豆包 高级套餐 价格"}}
+{"type":"result","num_turns":82,"total_cost_usd":4.20,"modelUsage":{ ... }}
+```
 
-判断只来自 trace 与 `manifest`（产物清单），纯规则抽取，归入 6 个维度：结果交付 `outcome`、上下文理解 `context`、能力覆盖 `capability`、执行质量 `execution`、风险控制 `risk`、产品表达 `product`。
+工具纯靠计数和正则,从这种行里数出:调了哪些工具、报了几次错、跑了哪些脚本、读了哪些规则、查了几次网、用了多少 token、调没调复核——这些是所有指标的原料。
 
-## 我做的工具（grader，评测器）
+## 两个"不信自报、自己核"的例子(纯规则的价值)
 
-raw trace 又长又技术，产品面试官没法直接读。三个工具把它压成"能看懂的证据、档位、结论"——**全是纯规则代码、零 LLM 调用**：同一份 trace 跑十遍结果完全一样，每个档位都能反查到源文件。
-
-| 工具 | 角色 | 原理 |
-|---|---|---|
-| [`tools/compare-traces.mjs`](tools/compare-traces.mjs) | grader（评测器） | 读 trace + manifest，用计数 / 正则抽信号 → 写死规则打档 → 输出 `metrics.json` + `report.md` |
-| [`tools/render-interview-html.mjs`](tools/render-interview-html.mjs) | 渲染器 | 读 `metrics.json` 套模板出 HTML |
-| [`tools/check-sandbox-baseline.mjs`](tools/check-sandbox-baseline.mjs) | 公平性校验 | 跑前扫 sandbox baseline，确认不含评分标准，防被测模型偷看（防泄题） |
-
-**可复用性：** 工具天然分两层——换任务时**引擎层不动**（trace 解析、指标抽取、脱敏、档位映射、n=2 稳定性聚合），只换**任务适配层**（outcome 验收项、manifest 字段、研究域名 / 错误正则）。交付的是评测能力，不是一次性结论。
+1. **成本核出错**:第三方 wrapper 在记录里把某轮成本报成 `$4.20`,工具不采信,用 `PRICE_TABLE` 里的**真实 token × 官方价**重算得 `¥0.59`——发现它把缓存 token 按贵约 200 倍的价算了。成本从此能被对方在自己控制台核对上。
+2. **自检拦矛盾**:某轮内部一致性自检发现"失败恢复判平、执行档位却不平"前后打架,**直接拒绝出结果**,逼我把判定逻辑改对。规则裁判的好处就在这:错了能查、能修、能复现。
 
 ## 仓库怎么读
 
 ```text
-AGENTS.md     最高优先级目标与偏航检查（项目宪法）
-plans/        当前权威评测方案 round2-refined-eval-plan.md
-execution/    执行规范：task-prompt + dual-model-execution-runbook + rerun-contract
-references/   背景原则（只作参考）
-tools/        grader 与校验工具（纯规则、零 LLM）
-runs/         一个完整代表性 run：双模型 raw trace + 产物 + 报告 + metrics
+tools/        ★ 三个 grader 工具(纯规则、零 LLM)—— 本仓库重点
+runs/         一个执行轮次的完整样例:双模型原始 trace + 产物 + manifest + metrics
+              （作为工具的「输入 / 输出样例」,证明它真的跑过真实数据）
+AGENTS.md     项目目标与边界
+plans/ execution/ references/   评测任务与执行规范（背景,按需翻）
 ```
 
-建议阅读顺序：本 README → [完整报告](runs/20260603-182255/interview-review.md) → [grader 源码](tools/compare-traces.mjs) → [评测方案](plans/round2-refined-eval-plan.md)。
+读法:先看 [grader 源码](tools/compare-traces.mjs),再用 [`runs/20260603-182255/`](runs/20260603-182255) 里的原始 `trace` 与 `comparison/metrics.json` 对照它如何把一行行轨迹变成指标。
 
-## 工程与安全边界（既是评测维度，也在作品自己身上落实）
+## 安全边界(工具自身落实)
 
-- **密钥永不入库：** `.env` / `.env.*` 由 [`.gitignore`](.gitignore) 拦截；provider `manifest` 只记录 `loaded_env_files` 文件名与 `task_id_present` 布尔值，**从不落地 API key 或真实 task_id**。
-- **防泄题：** baseline 校验确保被测模型看不到评分标准。
-- **防自满：** workflow 内置强制 `hook`（钩子检查）+ `subagent`（子代理）独立复核——本轮 DeepSeek 的 reviewer 真的抓出"视频 54 秒 vs 目标 30 秒"并被修正。
-- **客观可反查：** grader 零 LLM；结论层（`metrics` / `report`）脱敏，证据层（`runs/` 下 raw trace）保真。
+- **密钥永不入库:** `.env` 由 [`.gitignore`](.gitignore) 拦截;`manifest` 只记 `loaded_env_files` 文件名,不落地 key。
+- **脱敏:** trace 里的本地路径 / `Bearer` token / key 在抽取阶段脱敏后才落地。
+- **防泄题:** baseline 校验确保被测模型看不到评分标准。
 
 ## 复现
 
@@ -78,11 +71,7 @@ runs/         一个完整代表性 run：双模型 raw trace + 产物 + 报告 
 # 1. 跑前校验 sandbox 干净(防泄题)
 node tools/check-sandbox-baseline.mjs <workflow-sandbox 路径>
 
-# 2. 两个模型各执行(详见 execution/dual-model-execution-runbook.md)
-
-# 3. 抽指标 + 出报告
+# 2. 抽指标 + 出报告
 node tools/compare-traces.mjs
 node tools/render-interview-html.mjs
 ```
-
-> `runs/` 下只随仓库附带一个完整代表性 run 作为可复查证据；其余 run、原始 env 与密钥保留在本地、不入库。
