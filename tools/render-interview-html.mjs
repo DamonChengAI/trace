@@ -130,6 +130,432 @@ function capabilityPills(model) {
   return pills.map(([label, ok]) => `<span class="pill ${ok ? "on" : "off"}">${esc(label)}</span>`).join("");
 }
 
+function statusText(ok, weak = false) {
+  if (weak) return "覆盖，证据偏弱";
+  return ok ? "覆盖" : "未覆盖";
+}
+
+function capabilityCoverageHtml(models) {
+  const [opusModel, deepseekModel] = models;
+  const skillSeen = (model) => JSON.stringify(model.trace).includes("skills/video-workflow/SKILL.md");
+  const nestedSeen = (model) =>
+    model.trace.readPaths.some((item) => /scripts\/AGENTS\.md|reports\/AGENTS\.md/.test(item)) ||
+    /scripts\/AGENTS\.md|reports\/AGENTS\.md/.test(JSON.stringify(model.trace));
+  const rows = [
+    {
+      name: "AGENTS（项目规则）",
+      opus: statusText(opusModel.trace.readPaths.some((item) => item.includes("AGENTS.md"))),
+      deepseek: statusText(deepseekModel.trace.readPaths.some((item) => item.includes("AGENTS.md"))),
+      evidence: "是否先读根规则，确认任务目标、素材边界和交付口径。"
+    },
+    {
+      name: "Nested rules（嵌套规则）",
+      opus: statusText(nestedSeen(opusModel)),
+      deepseek: statusText(nestedSeen(deepseekModel)),
+      evidence: "是否读到 scripts / reports 下的局部规则。"
+    },
+    {
+      name: "Skill（技能）",
+      opus: statusText(skillSeen(opusModel)),
+      deepseek: statusText(skillSeen(deepseekModel)),
+      evidence: "是否读取 video-workflow skill（视频工作流技能）。"
+    },
+    {
+      name: "MCP / Search（工具调用 / 联网检索）",
+      opus: statusText(opusModel.trace.webSearchRequests > 0),
+      deepseek: statusText(deepseekModel.trace.webSearchRequests > 0, deepseekModel.artifacts.research.urlCount === 0),
+      evidence: `Opus URL=${opusModel.artifacts.research.urlCount}；DeepSeek URL=${deepseekModel.artifacts.research.urlCount}。`
+    },
+    {
+      name: "CLI scripts（命令行脚本）",
+      opus: statusText(opusModel.trace.scriptRuns.length >= 6),
+      deepseek: statusText(deepseekModel.trace.scriptRuns.length >= 6),
+      evidence: "是否执行生成、检查、安全和报告脚本。"
+    },
+    {
+      name: "Hook（钩子检查）",
+      opus: statusText(opusModel.trace.stopHookPassCount > 0),
+      deepseek: statusText(deepseekModel.trace.stopHookPassCount > 0),
+      evidence: "Stop hook（结束钩子）是否在收尾阶段通过。"
+    },
+    {
+      name: "Subagent（子代理）",
+      opus: statusText(opusModel.trace.subagents.includes("video-workflow-reviewer")),
+      deepseek: statusText(deepseekModel.trace.subagents.includes("video-workflow-reviewer")),
+      evidence: "是否有 reviewer（复核子代理）参与。"
+    },
+    {
+      name: "Eval / Review（评测 / 复核）",
+      opus: statusText(opusModel.trace.strictCheckRan && opusModel.trace.fullCheckRan && opusModel.artifacts.report.exists),
+      deepseek: statusText(deepseekModel.trace.strictCheckRan && deepseekModel.trace.fullCheckRan && deepseekModel.artifacts.report.exists),
+      evidence: "严格检查、全量检查和模型侧报告是否齐全。"
+    },
+    {
+      name: "Security（安全检查）",
+      opus: statusText(opusModel.artifacts.security.findings === 0),
+      deepseek: statusText(deepseekModel.artifacts.security.findings === 0),
+      evidence: "密钥、外部 URL、本地路径等风险是否被检查。"
+    },
+    {
+      name: "Trace（执行轨迹）",
+      opus: statusText(opusModel.trace.lines > 0),
+      deepseek: statusText(deepseekModel.trace.lines > 0),
+      evidence: "两边都有 stream-json（流式 JSON）轨迹文件。"
+    },
+    {
+      name: "Grader（评测器）",
+      opus: "覆盖",
+      deepseek: "覆盖",
+      evidence: "compare-traces 输出 metrics（指标）和 report（报告）。"
+    },
+    {
+      name: "Memory（长期记忆）",
+      opus: "未纳入硬验收",
+      deepseek: "未纳入硬验收",
+      evidence: "本轮只评执行现场能力，避免变量膨胀。"
+    },
+    {
+      name: "Audio（音频）",
+      opus: opusModel.artifacts.finalVideo.audio ? "有音轨，TTS 未评" : "无音轨",
+      deepseek: deepseekModel.artifacts.finalVideo.audio ? "有音轨，TTS 未评" : "无音轨",
+      evidence: "当前只证明 MP4 有音轨；TTS（文字转语音）口播等结构确认后再接。"
+    }
+  ];
+
+  return rows
+    .map(
+      (row) => `
+        <tr>
+          <th>${esc(row.name)}</th>
+          <td>${esc(row.opus)}</td>
+          <td>${esc(row.deepseek)}</td>
+          <td>${esc(row.evidence)}</td>
+        </tr>`
+    )
+    .join("");
+}
+
+function capabilityCoverageMarkdown(models) {
+  const [opusModel, deepseekModel] = models;
+  const skillSeen = (model) => JSON.stringify(model.trace).includes("skills/video-workflow/SKILL.md");
+  const nestedSeen = (model) =>
+    model.trace.readPaths.some((item) => /scripts\/AGENTS\.md|reports\/AGENTS\.md/.test(item)) ||
+    /scripts\/AGENTS\.md|reports\/AGENTS\.md/.test(JSON.stringify(model.trace));
+  const rows = [
+    {
+      name: "AGENTS（项目规则）",
+      opus: statusText(opusModel.trace.readPaths.some((item) => item.includes("AGENTS.md"))),
+      deepseek: statusText(deepseekModel.trace.readPaths.some((item) => item.includes("AGENTS.md"))),
+      evidence: "是否先读根规则，确认任务目标、素材边界和交付口径。"
+    },
+    {
+      name: "Nested rules（嵌套规则）",
+      opus: statusText(nestedSeen(opusModel)),
+      deepseek: statusText(nestedSeen(deepseekModel)),
+      evidence: "是否读到 scripts / reports 下的局部规则。"
+    },
+    {
+      name: "Skill（技能）",
+      opus: statusText(skillSeen(opusModel)),
+      deepseek: statusText(skillSeen(deepseekModel)),
+      evidence: "是否读取 video-workflow skill（视频工作流技能）。"
+    },
+    {
+      name: "MCP / Search（工具调用 / 联网检索）",
+      opus: statusText(opusModel.trace.webSearchRequests > 0),
+      deepseek: statusText(deepseekModel.trace.webSearchRequests > 0, deepseekModel.artifacts.research.urlCount === 0),
+      evidence: `Opus URL=${opusModel.artifacts.research.urlCount}；DeepSeek URL=${deepseekModel.artifacts.research.urlCount}。`
+    },
+    {
+      name: "CLI scripts（命令行脚本）",
+      opus: statusText(opusModel.trace.scriptRuns.length >= 6),
+      deepseek: statusText(deepseekModel.trace.scriptRuns.length >= 6),
+      evidence: "是否执行生成、检查、安全和报告脚本。"
+    },
+    {
+      name: "Hook（钩子检查）",
+      opus: statusText(opusModel.trace.stopHookPassCount > 0),
+      deepseek: statusText(deepseekModel.trace.stopHookPassCount > 0),
+      evidence: "Stop hook（结束钩子）是否在收尾阶段通过。"
+    },
+    {
+      name: "Subagent（子代理）",
+      opus: statusText(opusModel.trace.subagents.includes("video-workflow-reviewer")),
+      deepseek: statusText(deepseekModel.trace.subagents.includes("video-workflow-reviewer")),
+      evidence: "是否有 reviewer（复核子代理）参与。"
+    },
+    {
+      name: "Eval / Review（评测 / 复核）",
+      opus: statusText(opusModel.trace.strictCheckRan && opusModel.trace.fullCheckRan && opusModel.artifacts.report.exists),
+      deepseek: statusText(deepseekModel.trace.strictCheckRan && deepseekModel.trace.fullCheckRan && deepseekModel.artifacts.report.exists),
+      evidence: "严格检查、全量检查和模型侧报告是否齐全。"
+    },
+    {
+      name: "Security（安全检查）",
+      opus: statusText(opusModel.artifacts.security.findings === 0),
+      deepseek: statusText(deepseekModel.artifacts.security.findings === 0),
+      evidence: "密钥、外部 URL、本地路径等风险是否被检查。"
+    },
+    {
+      name: "Trace（执行轨迹）",
+      opus: statusText(opusModel.trace.lines > 0),
+      deepseek: statusText(deepseekModel.trace.lines > 0),
+      evidence: "两边都有 stream-json（流式 JSON）轨迹文件。"
+    },
+    {
+      name: "Grader（评测器）",
+      opus: "覆盖",
+      deepseek: "覆盖",
+      evidence: "compare-traces 输出 metrics（指标）和 report（报告）。"
+    },
+    {
+      name: "Memory（长期记忆）",
+      opus: "未纳入硬验收",
+      deepseek: "未纳入硬验收",
+      evidence: "本轮只评执行现场能力，避免变量膨胀。"
+    },
+    {
+      name: "Audio（音频）",
+      opus: opusModel.artifacts.finalVideo.audio ? "有音轨，TTS 未评" : "无音轨",
+      deepseek: deepseekModel.artifacts.finalVideo.audio ? "有音轨，TTS 未评" : "无音轨",
+      evidence: "当前只证明 MP4 有音轨；TTS（文字转语音）口播等结构确认后再接。"
+    }
+  ];
+
+  return rows.map((row) => `| ${row.name} | ${row.opus} | ${row.deepseek} | ${row.evidence} |`).join("\n");
+}
+
+function yesNo(value) {
+  return value ? "是" : "否";
+}
+
+function evaluationMapData(models) {
+  const [opusModel, deepseekModel] = models;
+  return [
+    {
+      step: "读项目规则",
+      expected: "先理解任务边界、素材约束和收尾要求",
+      capability: "AGENTS、nested rules（嵌套规则）、skill（技能）",
+      trace: "readPaths 是否包含 AGENTS / scripts / reports / skill",
+      tool: "抽取 trace.readPaths，判断是否读到关键规则",
+      opus: `readPaths=${opusModel.trace.readPaths.length}，读到规则和 skill`,
+      deepseek: `readPaths=${deepseekModel.trace.readPaths.length}，读到规则和 skill`,
+      conclusion: "两边都覆盖；DeepSeek 探索范围更大"
+    },
+    {
+      step: "联网研究",
+      expected: "检索豆包高级套餐公开信息，并留下可复查来源",
+      capability: "MCP / Search（工具调用 / 联网检索）",
+      trace: "webSearchRequests、research-notes URL 数",
+      tool: "统计联网请求和 research-notes 中 URL",
+      opus: `search=${opusModel.trace.webSearchRequests}，URL=${opusModel.artifacts.research.urlCount}`,
+      deepseek: `search=${deepseekModel.trace.webSearchRequests}，URL=${deepseekModel.artifacts.research.urlCount}`,
+      conclusion: "Opus 研究证据更可审计"
+    },
+    {
+      step: "生成图片",
+      expected: "生成 3 张真实图片，作为视频素材",
+      capability: "CLI scripts（命令行脚本）、provider（外部生成服务）调用",
+      trace: "real-provider-manifest completedImages",
+      tool: "读取 real-provider manifest，确认图片数量和轮询状态",
+      opus: `${opusModel.artifacts.realProvider.completedImages}/3，max poll=${opusModel.artifacts.realProvider.maxPollRound}`,
+      deepseek: `${deepseekModel.artifacts.realProvider.completedImages}/3，max poll=${deepseekModel.artifacts.realProvider.maxPollRound}`,
+      conclusion: "两边最终素材都达标"
+    },
+    {
+      step: "拼接视频",
+      expected: "用 3 张图片拼接约 30 秒视频，保留音轨",
+      capability: "video:compose、manifest（产物清单）",
+      trace: "final-video-manifest duration / audio / uses_provider_video",
+      tool: "读取 final-video manifest，判断时长、音轨和 provider 视频边界",
+      opus: `${opusModel.artifacts.finalVideo.durationSeconds}s，provider video=${opusModel.artifacts.finalVideo.usesProviderVideo}`,
+      deepseek: `${deepseekModel.artifacts.finalVideo.durationSeconds}s，provider video=${deepseekModel.artifacts.finalVideo.usesProviderVideo}`,
+      conclusion: "结果层基本拉平，差异要看过程"
+    },
+    {
+      step: "检查和 hook",
+      expected: "跑严格检查、全量检查和 Stop hook（结束钩子）",
+      capability: "Eval / Review（评测 / 复核）、hook（钩子检查）",
+      trace: "scriptRuns、strictCheckRan、fullCheckRan、stopHookPassCount",
+      tool: "识别 npm 脚本和 hook event（钩子事件）",
+      opus: `strict=${yesNo(opusModel.trace.strictCheckRan)}，full=${yesNo(opusModel.trace.fullCheckRan)}，hook=${opusModel.trace.stopHookPassCount}`,
+      deepseek: `strict=${yesNo(deepseekModel.trace.strictCheckRan)}，full=${yesNo(deepseekModel.trace.fullCheckRan)}，hook=${deepseekModel.trace.stopHookPassCount}`,
+      conclusion: "两边都完成门禁"
+    },
+    {
+      step: "subagent 复核",
+      expected: "用子代理做一次独立复核",
+      capability: "Subagent（子代理）",
+      trace: "trace.subagents",
+      tool: "抽取 subagent 类型",
+      opus: opusModel.trace.subagents.join(", ") || "无",
+      deepseek: deepseekModel.trace.subagents.join(", ") || "无",
+      conclusion: "两边覆盖 reviewer；DeepSeek 额外用了 Explore"
+    },
+    {
+      step: "失败恢复",
+      expected: "出错后能定位、修复并复验",
+      capability: "工具调用、debug（排障）、recovery（恢复）",
+      trace: "toolErrors、severeErrorCount、后续检查是否通过",
+      tool: "去重并分类工具错误，区分轻微和严重",
+      opus: `错误=${opusModel.trace.toolErrorCount}，严重=${opusModel.trace.severeErrorCount}`,
+      deepseek: `错误=${deepseekModel.trace.toolErrorCount}，严重=${deepseekModel.trace.severeErrorCount}`,
+      conclusion: "DeepSeek 恢复成本更高"
+    },
+    {
+      step: "最终表达",
+      expected: "最终说明和实际产物一致，能讲清风险和下一步",
+      capability: "Report（报告）、product expression（产品表达）",
+      trace: "finalSummary、video-run-report",
+      tool: "检查最终总结是否有产品语言和矛盾表达",
+      opus: `矛盾表达=${yesNo(opusModel.trace.finalSummary.hasContradictionAboutVideo)}`,
+      deepseek: `矛盾表达=${yesNo(deepseekModel.trace.finalSummary.hasContradictionAboutVideo)}`,
+      conclusion: "DeepSeek 最终表达有误导风险"
+    }
+  ];
+}
+
+function rowsToMarkdown(rows, keys) {
+  return rows.map((row) => `| ${keys.map((key) => row[key]).join(" | ")} |`).join("\n");
+}
+
+function rowsToHtml(rows, keys, firstHeader = true) {
+  return rows
+    .map(
+      (row) => `
+        <tr>
+          ${keys
+            .map((key, index) => `${firstHeader && index === 0 ? "<th>" : "<td>"}${esc(row[key])}${firstHeader && index === 0 ? "</th>" : "</td>"}`)
+            .join("")}
+        </tr>`
+    )
+    .join("");
+}
+
+function toolDesignData() {
+  return [
+    {
+      problem: "最终视频只能说明结果，不能说明过程",
+      design: "用同一个 video workflow（视频工作流）作为受控任务",
+      why: "视频任务简单好懂，但会自然触发规则读取、搜索、图片生成、脚本、检查、hook 和 subagent"
+    },
+    {
+      problem: "两个模型的差异容易被环境差异污染",
+      design: "用同一 prompt（任务提示）、同一 baseline（基线版本）、隔离 worktree（工作目录）、同一检查命令",
+      why: "先锁住变量，结论才像模型差异，不像环境差异"
+    },
+    {
+      problem: "raw trace（原始执行轨迹）太长，产品面试官很难直接读",
+      design: "只抽取和产品判断有关的证据字段",
+      why: "保留可验证性，同时降低讲解成本"
+    },
+    {
+      problem: "单个指标容易误判",
+      design: "按 6 个维度打分：结果、上下文、能力、执行质量、风险、产品表达",
+      why: "Agent 生产力评测要同时看交付、过程、风险和可解释性"
+    },
+    {
+      problem: "结论如果没有信源，会像主观评价",
+      design: "输出 metrics.json、report.md、HTML，并把结论绑定指标和来源",
+      why: "让面试官能从结论反查到证据"
+    }
+  ];
+}
+
+function scoreBreakdownData(models) {
+  const [opusModel, deepseekModel] = models;
+  return [
+    {
+      dimension: "Outcome（最终产物）",
+      weight: "25%",
+      rule: "先看任务是否交付。视频、图片、检查没过，后面过程再好也不算完成。",
+      opus: `${opusModel.scores.outcome}/5：视频 ${opusModel.artifacts.finalVideo.durationSeconds}s，图片 ${opusModel.artifacts.realProvider.completedImages}/3，严格检查通过。`,
+      deepseek: `${deepseekModel.scores.outcome}/5：视频 ${deepseekModel.artifacts.finalVideo.durationSeconds}s，图片 ${deepseekModel.artifacts.realProvider.completedImages}/3，严格检查通过。`
+    },
+    {
+      dimension: "Context（上下文理解）",
+      weight: "15%",
+      rule: "Claude Code 任务里，读懂项目规则是稳定执行的前提。",
+      opus: `${opusModel.scores.contextUnderstanding}/5：readPaths=${opusModel.trace.readPaths.length}，URL=${opusModel.artifacts.research.urlCount}。`,
+      deepseek: `${deepseekModel.scores.contextUnderstanding}/5：readPaths=${deepseekModel.trace.readPaths.length}，URL=${deepseekModel.artifacts.research.urlCount}。`
+    },
+    {
+      dimension: "Claude Code 能力",
+      weight: "18%",
+      rule: "覆盖规则、skill、脚本、search、hook、subagent、检查这些核心能力。",
+      opus: `${opusModel.scores.claudeCodeCapability}/5：脚本 ${opusModel.trace.scriptRuns.length} 类，hook=${opusModel.trace.stopHookPassCount}。`,
+      deepseek: `${deepseekModel.scores.claudeCodeCapability}/5：脚本 ${deepseekModel.trace.scriptRuns.length} 类，hook=${deepseekModel.trace.stopHookPassCount}。`
+    },
+    {
+      dimension: "执行质量",
+      weight: "18%",
+      rule: "看执行是否顺、错误是否少、出错后是否能恢复。",
+      opus: `${opusModel.scores.executionQuality}/5：错误 ${opusModel.trace.toolErrorCount} 类，严重 ${opusModel.trace.severeErrorCount} 类。`,
+      deepseek: `${deepseekModel.scores.executionQuality}/5：错误 ${deepseekModel.trace.toolErrorCount} 类，严重 ${deepseekModel.trace.severeErrorCount} 类。`
+    },
+    {
+      dimension: "风险控制",
+      weight: "14%",
+      rule: "看安全、来源、provider 边界和可复查性。",
+      opus: `${opusModel.scores.riskControl}/5：security=${opusModel.artifacts.security.findings}，URL=${opusModel.artifacts.research.urlCount}。`,
+      deepseek: `${deepseekModel.scores.riskControl}/5：security=${deepseekModel.artifacts.security.findings}，URL=${deepseekModel.artifacts.research.urlCount}。`
+    },
+    {
+      dimension: "产品表达",
+      weight: "10%",
+      rule: "最终说明影响用户信任，但权重低于真实产物和执行过程。",
+      opus: `${opusModel.scores.productExpression}/5：总结清晰。`,
+      deepseek: `${deepseekModel.scores.productExpression}/5：最终总结出现“真实视频状态：未生成”的歧义。`
+    }
+  ];
+}
+
+function conclusionEvidenceData(models) {
+  const [opusModel, deepseekModel] = models;
+  return [
+    {
+      conclusion: "Opus 过程更聚焦",
+      metric: "trace 行数 / readPaths",
+      opus: `${opusModel.trace.lines} / ${opusModel.trace.readPaths.length}`,
+      deepseek: `${deepseekModel.trace.lines} / ${deepseekModel.trace.readPaths.length}`,
+      source: "metrics.json -> trace.lines、trace.readPaths",
+      meaning: "DeepSeek 探索更多，人工复查成本更高"
+    },
+    {
+      conclusion: "Opus 研究证据更可审计",
+      metric: "research URL 数",
+      opus: `${opusModel.artifacts.research.urlCount}`,
+      deepseek: `${deepseekModel.artifacts.research.urlCount}`,
+      source: "research-notes.md + metrics.json",
+      meaning: "面试官能快速复查 Opus 的公开来源"
+    },
+    {
+      conclusion: "两边最终产物都达标",
+      metric: "视频时长 / 真实图片 / 严格检查",
+      opus: `${opusModel.artifacts.finalVideo.durationSeconds}s / ${opusModel.artifacts.realProvider.completedImages}/3 / ${yesNo(opusModel.trace.strictCheckRan)}`,
+      deepseek: `${deepseekModel.artifacts.finalVideo.durationSeconds}s / ${deepseekModel.artifacts.realProvider.completedImages}/3 / ${yesNo(deepseekModel.trace.strictCheckRan)}`,
+      source: "final-video-manifest.json、quality-check.json、trace.stream.jsonl",
+      meaning: "差异不在有没有做出来，差异在过程质量"
+    },
+    {
+      conclusion: "DeepSeek 恢复成本更高",
+      metric: "工具错误 / 严重错误",
+      opus: `${opusModel.trace.toolErrorCount} / ${opusModel.trace.severeErrorCount}`,
+      deepseek: `${deepseekModel.trace.toolErrorCount} / ${deepseekModel.trace.severeErrorCount}`,
+      source: "metrics.json -> trace.toolErrors、severeErrorCount",
+      meaning: "DeepSeek 能恢复，但需要更强 harness 和 grader 兜底"
+    },
+    {
+      conclusion: "DeepSeek 产品表达有风险",
+      metric: "最终总结是否矛盾",
+      opus: yesNo(opusModel.trace.finalSummary.hasContradictionAboutVideo),
+      deepseek: yesNo(deepseekModel.trace.finalSummary.hasContradictionAboutVideo),
+      source: "trace.stream.jsonl -> finalSummary",
+      meaning: "它说“真实视频状态：未生成”，容易误导面试官"
+    }
+  ];
+}
+
 function formatUsd(value) {
   return typeof value === "number" ? `$${value.toFixed(2)}` : "n/a";
 }
@@ -259,6 +685,49 @@ const html = `<!doctype html>
     .scoreCard b { font-size: 13px; color: #d6c7ad; }
     .scoreCard strong { display: block; font-size: 48px; line-height: 1; font-family: "Iowan Old Style", "Songti SC", serif; }
     .scoreCard span { font-size: 13px; color: #eadfc9; line-height: 1.45; }
+
+    .toolGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+    .toolBox {
+      border: 2px solid var(--ink);
+      background: var(--panel);
+      padding: 18px;
+      min-height: 190px;
+    }
+    .toolBox h3 {
+      margin: 0 0 10px;
+      font-family: "Iowan Old Style", "Songti SC", serif;
+      font-size: 24px;
+    }
+    .toolBox p, .toolBox li {
+      color: var(--charcoal);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .toolBox ul { margin: 0; padding-left: 18px; }
+    .commandBlock {
+      border: 2px solid var(--ink);
+      background: #171512;
+      color: #f5f1e8;
+      padding: 14px;
+      margin-top: 16px;
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-x: auto;
+    }
+    .callout {
+      border: 2px solid var(--gold);
+      background: #fbf2d5;
+      padding: 14px 16px;
+      margin-top: 14px;
+      color: var(--charcoal);
+      line-height: 1.65;
+      font-size: 14px;
+    }
 
     section { padding: 34px 0; border-top: 1px solid var(--line); }
     .sectionHead {
@@ -472,7 +941,7 @@ const html = `<!doctype html>
 
     @media (max-width: 820px) {
       header { position: static; }
-      .heroGrid, .videoGrid, .sectionHead, .modelCards, .talk, .links { grid-template-columns: 1fr; }
+      .heroGrid, .toolGrid, .videoGrid, .sectionHead, .modelCards, .talk, .links { grid-template-columns: 1fr; }
       .scoreCard { grid-template-columns: 1fr; }
       .chainGrid { grid-template-columns: 1fr; }
       .chainGrid > div { border-right: 0; }
@@ -486,27 +955,28 @@ const html = `<!doctype html>
     <div class="wrap topline">
       <div class="mark">Doubao Agent Trace Eval</div>
       <nav>
-        <a href="#proof">视频证据</a>
+        <a href="#approach">思路</a>
+        <a href="#problem">工具</a>
+        <a href="#map">证据地图</a>
         <a href="#scores">评分</a>
-        <a href="#trace">Trace 链路</a>
-        <a href="#evidence">证据</a>
-        <a href="#talk">面试讲法</a>
+        <a href="#conclusions">结论信源</a>
+        <a href="#verify">验证</a>
       </nav>
     </div>
   </header>
 
   <main class="wrap">
     <section class="hero">
-      <div class="kicker">Run ${esc(metrics.runId)} / Product-facing eval artifact</div>
+      <div class="kicker">Run ${esc(metrics.runId)} / Product-facing eval artifact（产品评测作品）</div>
       <h1>两个模型都做出了视频，差异在过程可信度。</h1>
-      <p>这份作品把 Claude Code 的 raw trace 转成产品判断：谁更稳定地读懂项目规则、复用 workflow、处理失败、守住安全边界，并把结果讲成业务方能理解的交付结论。</p>
+      <p>这份作品把 Claude Code 的 raw trace（原始执行轨迹）转成产品判断：谁更稳定地读懂项目规则、复用 workflow（工作流）、处理失败、守住安全边界，并把结果讲成业务方能理解的交付结论。</p>
       <div class="heroGrid">
         <article class="decision">
           <div>
             <h2>${esc(metrics.comparison.productConclusion)}</h2>
             <p>${esc(metrics.comparison.harnessImplication)}</p>
           </div>
-          <p>面试重点：最终视频只是 outcome 证明，真正评的是 Agent 生产力任务里的过程可控性、人工接管成本和可复用评测标准。</p>
+          <p>面试重点：最终视频只是 outcome（最终产物）证明，真正评的是 Agent（智能体）生产力任务里的过程可控性、人工接管成本和可复用评测标准。</p>
         </article>
         <aside class="scoreCard">
           ${models
@@ -523,27 +993,60 @@ const html = `<!doctype html>
       </div>
     </section>
 
-    <section id="proof">
+    <section id="approach">
       <div class="sectionHead">
-        <h2>视频证据</h2>
-        <p>两个模型都完成了同一任务：主题《快来购买豆包高级套餐吧！》，30 秒左右，3 张真实图片生成后用 ffmpeg 拼接，未调用 provider 视频生成接口。</p>
+        <h2>解决思路</h2>
+        <p>概述：先把评测问题产品化，再用一个受控 workflow（工作流）暴露模型差异，最后用工具把 trace（执行轨迹）转成证据和结论。</p>
       </div>
-      <div class="videoGrid">
-        <article class="videoBox">
-          <video src="opus/artifacts/outputs/video-run/final-video.mp4" controls preload="metadata"></video>
-          <div class="caption"><b>Opus</b><span>${esc(opus.artifacts.finalVideo.durationSeconds)}s / ${esc(opus.artifacts.realProvider.completedImages)} real images / max poll ${esc(opus.artifacts.realProvider.maxPollRound)}</span></div>
+      <div class="toolGrid">
+        <article class="toolBox">
+          <h3>1. 定义产品问题</h3>
+          <p>Agent（智能体）评测不能只看最终视频，还要看过程是否可控、失败能否恢复、安全边界是否守住、人工接管成本多高。</p>
         </article>
-        <article class="videoBox">
-          <video src="deepseek/artifacts/outputs/video-run/final-video.mp4" controls preload="metadata"></video>
-          <div class="caption"><b>DeepSeek</b><span>${esc(deepseek.artifacts.finalVideo.durationSeconds)}s / ${esc(deepseek.artifacts.realProvider.completedImages)} real images / max poll ${esc(deepseek.artifacts.realProvider.maxPollRound)}</span></div>
+        <article class="toolBox">
+          <h3>2. 设计受控任务</h3>
+          <p>两个模型跑同一个 30 秒视频任务。这个任务容易理解，又会自然触发规则、搜索、图片、脚本、检查、hook 和 subagent。</p>
+        </article>
+        <article class="toolBox">
+          <h3>3. 采集 Trace</h3>
+          <p>用同一 prompt（任务提示）、同一 baseline（基线版本）、隔离 worktree（工作目录）、同一检查命令跑两次。</p>
+        </article>
+        <article class="toolBox">
+          <h3>4. 做评测工具</h3>
+          <p>工具从 trace 和 manifest（产物清单）抽证据，生成 metrics（指标）、report（报告）和 HTML，让结论能反查到来源。</p>
         </article>
       </div>
     </section>
 
+    <section id="problem">
+      <div class="sectionHead">
+        <h2>工具设计</h2>
+        <p>概述：工具解决的是“最终结果都完成了，但过程差异看不见”的问题。设计重点放在把原始 trace 压缩成可验证的证据、评分和产品结论。</p>
+      </div>
+      <table>
+        <thead><tr><th>要解决的问题</th><th>工具设计</th><th>为什么这样设计最合理</th></tr></thead>
+        <tbody>${rowsToHtml(toolDesignData(), ["problem", "design", "why"])}</tbody>
+      </table>
+      <div class="callout">工具产物分三层：<b>metrics.json</b> 给机器读，<b>report.md</b> 给复盘读，<b>interview-review.html</b> 给面试展示读。raw trace（原始执行轨迹）保留本地，用来反查证据。</div>
+    </section>
+
+    <section id="map">
+      <div class="sectionHead">
+        <h2>评测证据地图</h2>
+        <p>概述：这张表把任务要完成什么、要评什么、trace 怎么看、工具怎么生效、结论来自哪里全部串在一起。它是整份作品的主表。</p>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Workflow 环节</th><th>要完成什么</th><th>覆盖什么能力</th><th>Trace 怎么看</th><th>工具怎么生效</th><th>Opus 证据</th><th>DeepSeek 证据</th><th>影响什么结论</th></tr>
+        </thead>
+        <tbody>${rowsToHtml(evaluationMapData(models), ["step", "expected", "capability", "trace", "tool", "opus", "deepseek", "conclusion"])}</tbody>
+      </table>
+    </section>
+
     <section id="scores">
       <div class="sectionHead">
-        <h2>评分矩阵</h2>
-        <p>评分按产品评测目标加权：结果完成 25%、上下文理解 15%、Claude Code 能力 18%、执行质量 18%、风险控制 14%、产品表达 10%。分数来自 trace 和产物 manifest 的可复验证据。</p>
+        <h2>评分方法</h2>
+        <p>概述：评分的目标是把“结果、过程、风险、表达”分开看。权重按产品影响排序：先看是否交付，再看过程质量和风险。</p>
       </div>
       <table>
         <thead>
@@ -556,75 +1059,55 @@ const html = `<!doctype html>
           ${scoreRows(models)}
         </tbody>
       </table>
+      <div class="sectionHead" style="margin-top:18px">
+        <h2>扣分原因</h2>
+        <p>概述：每个分数都绑定具体证据。DeepSeek 的产物也达标，主要扣在研究证据、执行错误和最终表达。</p>
+      </div>
+      <table>
+        <thead>
+          <tr><th>维度</th><th>权重</th><th>为什么这样定</th><th>Opus 得分原因</th><th>DeepSeek 得分原因</th></tr>
+        </thead>
+        <tbody>${rowsToHtml(scoreBreakdownData(models), ["dimension", "weight", "rule", "opus", "deepseek"])}</tbody>
+      </table>
     </section>
 
-    <section id="trace">
+    <section id="conclusions">
       <div class="sectionHead">
-        <h2>Trace 链路</h2>
-        <p>面试讲解时不用展示 raw trace。把链路压缩成 8 个关键节点就够：规则、研究、真实图片、拼接、subagent、检查、hook、最终表达。</p>
+        <h2>结论证据卡</h2>
+        <p>概述：下面每条结论都绑定了指标和信源。面试官如果追问，可以从这张表反查到 metrics、manifest、research notes 或 raw trace。</p>
       </div>
-      <div class="chainGrid">
-        <div class="label">链路节点</div><div class="label">Opus 官方 Claude Code</div><div class="label">DeepSeek Claude Code</div>
-        ${["rules", "research", "real", "compose", "review", "check", "hook", "express"]
-          .map((key) => {
-            const labels = {
-              rules: "读项目约束",
-              research: "联网研究",
-              real: "真实图片",
-              compose: "视频拼接",
-              review: "subagent 审查",
-              check: "质量门禁",
-              hook: "Stop hook",
-              express: "产品表达"
-            };
-            return `<div class="label">${esc(labels[key])}</div><div>${chainCell(opus, key)}</div><div>${chainCell(deepseek, key)}</div>`;
-          })
-          .join("")}
-      </div>
+      <table>
+        <thead><tr><th>结论</th><th>关键指标</th><th>Opus</th><th>DeepSeek</th><th>信源</th><th>产品含义</th></tr></thead>
+        <tbody>${rowsToHtml(conclusionEvidenceData(models), ["conclusion", "metric", "opus", "deepseek", "source", "meaning"])}</tbody>
+      </table>
     </section>
 
-    <section id="evidence">
+    <section id="verify">
       <div class="sectionHead">
-        <h2>证据摘要</h2>
-        <p>这部分是面试官追问时的证据库。它只展示脱敏后的指标和产物路径，raw trace 留在本地 run 目录，不作为公开材料。</p>
+        <h2>怎么验证</h2>
+        <p>概述：不需要逐行读完 trace.stream.jsonl。正确验证方式是先看工具整理出的证据，再按需要反查原始文件。</p>
       </div>
-      <div class="modelCards">
-        ${models
-          .map(
-            (model) => `
-              <article class="modelCard">
-                <h3>${esc(model.label)}</h3>
-                <div class="pillRow">${capabilityPills(model)}</div>
-                <div class="facts">
-                  <div class="fact"><b>${esc(model.trace.lines)}</b><span>trace JSONL lines</span></div>
-                  <div class="fact"><b>${formatUsd(model.trace.totalCostUsd)}</b><span>run cost from CLI result</span></div>
-                  <div class="fact"><b>${esc(model.artifacts.research.urlCount)}</b><span>research URLs in artifact</span></div>
-                  <div class="fact"><b>${esc(model.trace.toolErrorCount)}</b><span>deduped tool error classes</span></div>
-                </div>
-                <ul class="evidence">${evidenceList(model)}</ul>
-              </article>`
-          )
-          .join("")}
+      <div class="toolGrid">
+        <article class="toolBox"><h3>1. 看 metrics</h3><p>先打开 <code>comparison/metrics.json</code>，确认视频、图片、脚本、错误、hook、subagent、URL 等指标。</p></article>
+        <article class="toolBox"><h3>2. 看证据地图</h3><p>确认每个 workflow 环节都有对应 trace 证据和工具抽取字段。</p></article>
+        <article class="toolBox"><h3>3. 看评分表</h3><p>确认每个维度为什么给这个分，尤其是 DeepSeek 的扣分点。</p></article>
+        <article class="toolBox"><h3>4. 看信源</h3><p>从结论证据卡反查到 manifest、research-notes、video-run-report 和 raw trace。</p></article>
       </div>
     </section>
 
-    <section id="talk">
+    <section id="files">
       <div class="sectionHead">
-        <h2>面试讲法</h2>
-        <p>这份 HTML 的用法是先讲产品问题，再讲实验设计，最后拿 trace 证据解释两个模型的差异。不要陷入视频画面审美。</p>
+        <h2>边界和文件</h2>
+        <p>概述：本轮已经能支撑 trace 评测工具主线。音频口播可以最后再补，不影响现在这版结构判断。</p>
       </div>
-      <div class="talk">
-        <article>
-          <h3>90 秒开场</h3>
-          <p>我做的是一个轻量 Agent trace 评测工具。因为生产力 Agent 的质量不能只看最终结果，还要看过程是否可控、失败是否能恢复、安全边界是否守住、人工接管成本有多高。我让 Opus 和 DeepSeek 在同一个 Claude Code 项目里生成一条 30 秒豆包高级套餐推广视频，再把 raw trace 转成产品评测维度。结果两边都交付了视频，但 Opus 的证据链更可信，DeepSeek 的恢复能力不错，过程更容易产生人工复核成本。</p>
+      <div class="videoGrid">
+        <article class="videoBox">
+          <video src="opus/artifacts/outputs/video-run/final-video.mp4" controls preload="metadata"></video>
+          <div class="caption"><b>Opus</b><span>${esc(opus.artifacts.finalVideo.durationSeconds)}s / ${esc(opus.artifacts.realProvider.completedImages)} 张真实图片</span></div>
         </article>
-        <article>
-          <h3>追问时讲三点</h3>
-          <ul>
-            <li>受控变量：同一 prompt、同一 baseline、隔离 worktree、同一真实图片接口、同一检查命令。</li>
-            <li>评测维度：结果完成、上下文理解、Claude Code 能力、执行质量、风险控制、产品表达。</li>
-            <li>产品判断：工具把 trace 变成“谁更省人工、谁更可审计、谁更适合复杂 Agent 工作流”的业务语言。</li>
-          </ul>
+        <article class="videoBox">
+          <video src="deepseek/artifacts/outputs/video-run/final-video.mp4" controls preload="metadata"></video>
+          <div class="caption"><b>DeepSeek</b><span>${esc(deepseek.artifacts.finalVideo.durationSeconds)}s / ${esc(deepseek.artifacts.realProvider.completedImages)} 张真实图片</span></div>
         </article>
       </div>
       <div class="links">
@@ -633,11 +1116,12 @@ const html = `<!doctype html>
         <a href="opus/artifacts/reports/video-run-report.md"><b>Opus 报告</b><br>模型侧视频 workflow 复盘</a>
         <a href="deepseek/artifacts/reports/video-run-report.md"><b>DeepSeek 报告</b><br>模型侧视频 workflow 复盘</a>
       </div>
+      <div class="callout">当前两个最终 MP4 都有音轨，但还没有接入真实 TTS（文字转语音）口播。这个问题放到最后补音频 API，不影响本版 trace 评测结构。</div>
     </section>
   </main>
 
   <footer class="wrap">
-    Raw trace is local-only evidence. This HTML uses sanitized metrics and local artifact links from runs/${esc(metrics.runId)}.
+    Raw trace（原始执行轨迹）只作为本地证据保存。这个 HTML 使用脱敏 metrics（指标）和 runs/${esc(metrics.runId)} 下的本地产物链接。
   </footer>
 </body>
 </html>
@@ -650,46 +1134,54 @@ Run ID：${metrics.runId}
 
 ## 一句话结论
 
+概述：Opus 更适合作为本轮复杂生产力 Agent（智能体）任务的默认基线。两边都交付了最终视频，差异主要在过程是否聚焦、研究证据是否可审计、失败恢复成本和最终表达是否清楚。
+
 ${metrics.comparison.productConclusion}
 
-这次作品要讲清的不是“哪个视频更好看”，而是两个模型在同一个 Claude Code 生产力任务里，谁更能稳定地把一句需求推进成可交付结果，谁的过程更可审计，谁的失败恢复和最终表达更适合沉淀成 Agent 评测标准。
+## 我解决这个问题的思路
 
-## 为什么做这个评测
+概述：先把评测问题产品化，再用一个受控 workflow（工作流）把模型差异暴露出来，最后用工具把 trace（执行轨迹）转成证据和结论。
 
-我面试的是豆包 Agent 生产力评测产品岗。生产力 Agent 的价值不只在最终输出，还在过程质量：
+| 步骤 | 我怎么做 | 为什么这样做 |
+|---|---|---|
+| 先定义产品问题 | 评估两个模型在 Claude Code 里完成同一任务的过程差异 | Agent 生产力评测不能只看最终视频，还要看可控性、恢复能力、安全边界和人工接管成本 |
+| 再设计受控任务 | 让两边都生成 30 秒豆包高级套餐推广视频 | 任务容易理解，但会自然触发规则、搜索、图片、脚本、检查、hook 和 subagent |
+| 再采集 trace | 用同一 prompt（任务提示）、同一 baseline（基线版本）、隔离 worktree（工作目录）、同一检查命令跑两次 | 先控制变量，后面的差异才更像模型差异 |
+| 最后做工具 | 从 trace 和 manifest（产物清单）抽证据，生成 metrics、report 和 HTML | 面试官不需要读原始日志，也能验证结论从哪里来 |
 
-- 是否先读项目规则、skill 和 workflow 约束。
-- 是否会用已有脚本和检查命令，而不是手写一套不可复用的临时产物。
-- 真实 API 调用失败或脚本报错时，能不能自己定位和恢复。
-- 是否守住密钥、路径、provider 结果 URL 等安全边界。
-- 最终能不能把 trace 证据翻译成产品和业务方能理解的判断。
+## 工具解决什么问题
 
-所以我设计了一个最小但完整的 workflow：两个模型都在 Claude Code 里生成一条 30 秒视频，主题是《快来购买豆包高级套餐吧！》，必须联网检索最新信息，只生成 3 张图片，再用图片拼接成视频。
+概述：工具解决的是“最终结果都完成了，但过程差异看不见”的问题。它把原始 trace 压缩成可验证的证据地图、评分拆解和结论信源。
 
-## 受控变量
+本工具不做完整 trace viewer（轨迹查看器），也不把重点放在视频审美。它只做本场景最关键的事：把模型执行过程里的证据抽出来，映射到产品评测维度。
 
-- 同一任务 prompt：只给视频主题、时长、联网检索和图片拼接要求。
-- 同一 workflow baseline：\`workflow-sandbox\` 的同一个 commit。
-- 同一执行方式：Opus 用官方 Claude Code 入口，DeepSeek 用 Claude Code DeepSeek 入口。
-- 同一产物要求：3 张真实 provider 图片、30 秒左右最终视频、严格检查、security check、hook、subagent review。
-- 同一 trace 采集：\`stream-json\`、\`--include-hook-events\`、\`--verbose\`。
+## 评测证据地图
 
-## 最终产物
+概述：这张表把 workflow 要完成的事、要覆盖的 Claude Code 能力、具体 trace 怎么看、工具怎么生效、两个模型的证据和最后结论串在一起。
 
-| 模型 | 最终视频 | 真实图片 | Provider 视频 | 严格检查 | Stop hook |
-|---|---:|---:|---:|---:|---:|
-${models
-  .map(
-    (model) =>
-      `| ${model.label} | ${model.artifacts.finalVideo.durationSeconds}s | ${model.artifacts.realProvider.completedImages}/3 | ${model.artifacts.finalVideo.usesProviderVideo ? "使用" : "未使用"} | ${model.trace.strictCheckRan ? "通过" : "未通过"} | ${model.trace.stopHookPassCount > 0 ? "通过" : "无证据"} |`
-  )
-  .join("\n")}
+| Workflow 环节 | 这个环节要完成什么 | 覆盖什么能力 | Trace 怎么看 | 工具怎么生效 | Opus 证据 | DeepSeek 证据 | 影响什么结论 |
+|---|---|---|---|---|---|---|---|
+${rowsToMarkdown(evaluationMapData(models), ["step", "expected", "capability", "trace", "tool", "opus", "deepseek", "conclusion"])}
 
-两边都交付了最终视频，视频都由真实 provider 图片拼接而成，没有调用 provider 视频接口。这说明 outcome 不是主要差异，真正要看 trace。
+## 工具怎么设计，为什么这么设计
 
-## 分数
+概述：工具采用“统一执行环境 -> 证据抽取 -> 评分评测 -> 面试呈现”的设计。这样做的原因是：先保证公平，再保证可验证，最后让产品面试官能读懂。
 
-| 模型 | 综合分 | 结果完成 | 上下文理解 | Claude Code 能力 | 执行质量 | 风险控制 | 产品表达 |
+| 要解决的问题 | 工具设计 | 为什么这样设计最合理 |
+|---|---|---|
+${rowsToMarkdown(toolDesignData(), ["problem", "design", "why"])}
+
+工具产出的结果有三类：
+
+- \`metrics.json\`：给机器和后续工具读，保存结构化指标。
+- \`report.md\`：给复盘读，解释评分、证据和结论。
+- \`interview-review.html\`：给面试展示读，把复杂 trace 翻译成产品语言。
+
+## 评分方法
+
+概述：评分的目标是把“结果、过程、风险、表达”分开看。权重按产品影响排序：先看是否交付，再看过程质量和风险，最后看交付表达。
+
+| 模型 | 综合分 | 结果完成（outcome） | 上下文理解 | Claude Code 能力 | 执行质量 | 风险控制 | 产品表达 |
 |---|---:|---:|---:|---:|---:|---:|---:|
 ${models
   .map(
@@ -698,45 +1190,31 @@ ${models
   )
   .join("\n")}
 
-## 关键差异
+| 维度 | 权重 | 为什么这样定 | Opus 为什么得这个分 | DeepSeek 为什么得这个分 |
+|---|---:|---|---|---|
+${rowsToMarkdown(scoreBreakdownData(models), ["dimension", "weight", "rule", "opus", "deepseek"])}
 
-### Opus 官方 Claude Code
+## 结论证据卡
 
-- 过程更聚焦：读取规则、skill、脚本后，较快进入 workflow 执行。
-- 研究证据更强：research-notes 保留 6 个公开 URL，并明确“以官方页面为准”的不确定项。
-- 复用项目能力更稳：\`video:export\`、\`real-media:smoke\`、\`video:compose\`、\`video:check\`、\`security:check\`、\`video:report\`、\`hook:check\`、\`npm run check\` 都被执行。
-- 最终表达更适合面试：能把结果、检查、风险和下一步讲成产品结论。
+概述：下面每条结论都绑定了指标和信源。面试官如果追问，可以从这张表反查到 \`metrics.json\`、manifest、research notes 或 raw trace。
 
-### DeepSeek Claude Code
+| 结论 | 关键指标 | Opus | DeepSeek | 信源 | 产品含义 |
+|---|---|---:|---:|---|---|
+${rowsToMarkdown(conclusionEvidenceData(models), ["conclusion", "metric", "opus", "deepseek", "source", "meaning"])}
 
-- 结果也完成：真实图片 3/3，最终视频 29.96 秒，严格检查和全量检查都通过。
-- 探索成本更高：先大范围读了更多代码和 API 文件，trace 更长。
-- 过程出现结构性失败：先手写产物，\`media-manifest.json\` 缺少脚本需要的 \`media_tasks\`，导致 \`video:report\` 报错；随后它能定位并修复。
-- 研究证据较弱：research-notes 有来源名称，但没有 URL，不利于面试官快速复查。
-- 最终表达有歧义：总结里出现“真实视频状态：未生成”，容易让产品面试官误解为最终视频没有产出。
+## Trace 怎么验证
 
-## Trace 链路压缩版
+概述：你不需要逐行读完 \`trace.stream.jsonl\`。正确验证方式是先看工具整理出的证据，再按需要反查原始文件。
 
-| 链路节点 | Opus | DeepSeek |
-|---|---|---|
-| 读项目约束 | ${opus.trace.readPaths.some((item) => item.includes("AGENTS.md")) ? "有证据" : "弱"} | ${deepseek.trace.readPaths.some((item) => item.includes("AGENTS.md")) ? "有证据" : "弱"} |
-| 联网研究 | ${opus.artifacts.research.urlCount} 个 URL | ${deepseek.artifacts.research.urlCount} 个 URL |
-| 真实图片生成 | ${opus.artifacts.realProvider.completedImages}/3 | ${deepseek.artifacts.realProvider.completedImages}/3 |
-| 图片拼接视频 | ${opus.artifacts.finalVideo.durationSeconds}s | ${deepseek.artifacts.finalVideo.durationSeconds}s |
-| subagent | ${opus.trace.subagents.join(", ")} | ${deepseek.trace.subagents.join(", ")} |
-| 严格检查 | ${opus.trace.strictCheckRan ? "有" : "无"} | ${deepseek.trace.strictCheckRan ? "有" : "无"} |
-| Stop hook | ${opus.trace.stopHookPassCount > 0 ? "通过" : "无证据"} | ${deepseek.trace.stopHookPassCount > 0 ? "通过" : "无证据"} |
-| 产品表达 | ${opus.trace.finalSummary.hasContradictionAboutVideo ? "有歧义" : "清晰"} | ${deepseek.trace.finalSummary.hasContradictionAboutVideo ? "有歧义" : "清晰"} |
+1. 先看 \`comparison/metrics.json\`：确认两边最终产物、脚本、错误、hook、subagent、URL 等指标。
+2. 再看“评测证据地图”：确认每个 workflow 环节是否有 trace 证据。
+3. 再看“评分方法”：确认每个分数为什么这么给。
+4. 再看“结论证据卡”：确认每句结论对应哪个指标、哪个来源。
+5. 如果还要复核，再打开 \`trace.stream.jsonl\`、\`final-video-manifest.json\`、\`research-notes.md\` 和 \`video-run-report.md\`。
 
-## 面试时怎么讲
+## 可展示文件和边界
 
-先讲业务问题：Agent 评测不能只看最后视频，因为复杂生产力任务里，失败恢复、可审计性、安全边界和人工接管成本会直接影响产品能不能规模化落地。
-
-再讲实验设计：我用 30 秒视频 workflow 做受控任务，让两个模型都必须经历规则读取、联网研究、图片生成、视频拼接、失败恢复、subagent 审查、hook 和检查门禁。任务不复杂，但链路足够完整。
-
-最后讲结论：两个模型都能交付 outcome，Opus 更适合做复杂 Agent 任务的默认基线，DeepSeek 的可达成能力不错，但更需要 harness 约束和自动 grader 帮它减少手写结构、研究证据和最终表达上的风险。
-
-## 可展示文件
+概述：本轮已经能支撑 trace 评测工具的主线。音频口播可以最后再补，不影响现在这版结构判断。
 
 - HTML 讲解页：\`runs/${metrics.runId}/interview-review.html\`
 - 本 MD：\`runs/${metrics.runId}/interview-review.md\`
@@ -744,13 +1222,7 @@ ${models
 - 结构化指标：\`runs/${metrics.runId}/comparison/metrics.json\`
 - Opus 视频：\`runs/${metrics.runId}/opus/artifacts/outputs/video-run/final-video.mp4\`
 - DeepSeek 视频：\`runs/${metrics.runId}/deepseek/artifacts/outputs/video-run/final-video.mp4\`
-
-## 后续可以怎么产品化
-
-- 升级 research grader：要求至少 3 个 URL、明确访问日期、必须写不确定项。
-- 把“最终表达不能自相矛盾”做成自动检查。
-- 把 raw trace 脱敏摘要化，只把 metrics/report 给产品和业务方看。
-- 多跑 3-5 个不同任务主题，验证这个结论是否稳定。
+- 当前两个最终 MP4 都有音轨，但还没有接入真实 TTS（文字转语音）口播；这个问题放到最后补音频 API。
 `;
 fs.writeFileSync(markdownPath, markdown);
 console.log(`html written: ${path.relative(repoRoot, outputPath)}`);

@@ -1,5 +1,7 @@
 # 参考原则：Claude Code Runtime 能力分层
 
+> ⚠️ **已过期，仅作背景参考**：本文含"六层工作流"旧口径，已被 `plans/round2-refined-eval-plan.md` 取代。Claude Code 能力梳理以权威方案为准。
+
 来源：用户提供的 Claude Code skill / memory / AGENTS 分层文章总结。
 
 这份文档只服务本次作业，不做文章复述。它回答一个问题：为了评测两个模型在 Claude Code 框架下的差异，任务里应该让哪些 runtime 能力自然出现。

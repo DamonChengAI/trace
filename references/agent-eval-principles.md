@@ -1,5 +1,7 @@
 # 参考原则：Agent Eval 怎么设计
 
+> ⚠️ **已过期，仅作背景参考**：本文含"六层工作流"旧口径，已被 `plans/round2-refined-eval-plan.md` 取代。开发以权威方案为准，不要把"六层"带入。
+
 来源：[Anthropic, Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)
 
 这份文档只服务本次作业，不做文章复述。它回答一个问题：怎样把“两个模型驱动 Claude Code 做同一任务”设计成一个可解释的 agent eval。
