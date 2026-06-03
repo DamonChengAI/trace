@@ -9,12 +9,118 @@ const modelConfigs = [
   { id: "deepseek", label: "DeepSeek Claude Code" }
 ];
 
-function currentRunId() {
-  return fs.readFileSync(path.join(repoRoot, ".current-run-id"), "utf8").trim();
+// ─────────────────────────────────────────────────────────────────────────────
+// 任务适配层（TASK PROFILE）——这一块是"视频生成任务"专属的旋钮。
+// 换任务评测时，原则上只改这个对象（+ extractArtifacts 里读的 manifest 字段）；
+// 引擎层（trace 解析、错误分级、一次通过率、档位映射、内部一致性、n=2 稳定性、
+// keyFindings 比较、渲染）保持不动。这就是"换任务=换适配器"的那条缝。
+// ─────────────────────────────────────────────────────────────────────────────
+const TASK_PROFILE = {
+  // outcome 验收口径：什么算"做完了"（视频专属）
+  outcome: {
+    durationSecondsMin: 28,
+    durationSecondsMax: 32,
+    storyboardItems: 3,
+    realImageCount: 3
+  },
+  // 真实 provider 重试上限（守边界，乱花钱信号）
+  hardCap: 30,
+  // 复验门禁脚本：一次通过率统计的对象
+  gateScripts: ["video:check", "security:check", "hook:check", "check"],
+  // 研究"官方/准官方来源"判定（字节系域名）——换主体/换任务时替换这条正则
+  officialDomainPattern:
+    /(^|\.)doubao\.com$|(^|\.)bytedance\.com$|(^|\.)volcengine\.com$|(^|\.)oceanengine\.com$|(^|\.)snssdk\.com$|(^|\.)toutiao\.com$|(^|\.)feishu\.cn$|(^|\.)byteimg\.com$/
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 成本价表（PRICE TABLE）——第三方 wrapper 报的 result.total_cost_usd 对非 Anthropic
+// 模型不可信：实测把 DeepSeek 的缓存读 token 高估约 200x、整轮成本高估约 52x。
+// 凡登记在此的模型，成本一律用 trace 真实 token × 官方 list price 自算；未登记模型
+// （如 Anthropic 第一方计费，可信）回退到 result.total_cost_usd 并标注来源。
+// ─────────────────────────────────────────────────────────────────────────────
+const CNY_PER_USD = 7.2; // 约略汇率，仅用于把人民币官方价折算成美元做同币种比较
+const PRICE_TABLE = {
+  // DeepSeek 官方价（人民币/百万 token）https://api-docs.deepseek.com/zh-cn/quick_start/pricing/
+  "deepseek-v4-pro[1m]": { currency: "CNY", inMiss: 3.0, inHit: 0.025, out: 6.0 },
+  "deepseek-v4-flash": { currency: "CNY", inMiss: 1.0, inHit: 0.02, out: 2.0 }
+};
+
+function toUsd(amount, currency) {
+  return currency === "CNY" ? amount / CNY_PER_USD : amount;
 }
 
-const runIds = process.argv.slice(2).filter(Boolean);
-const targetRunIds = runIds.length > 0 ? runIds : [currentRunId()];
+// 用 trace 真实 token × 官方价重算成本；全部模型已登记→官方价，否则→第一方 total_cost_usd
+function computeRunCostUsd(result) {
+  const modelUsage = result?.modelUsage && typeof result.modelUsage === "object" ? result.modelUsage : {};
+  const reportedUsd = Number.isFinite(Number(result?.total_cost_usd)) ? Number(result.total_cost_usd) : null;
+  const models = Object.keys(modelUsage);
+  const allPriced = models.length > 0 && models.every((model) => PRICE_TABLE[model]);
+  if (!allPriced) {
+    return { usd: reportedUsd, source: "first_party_reported", nativeLabel: null, reportedUsd, breakdown: [] };
+  }
+  let usd = 0;
+  let nativeTotal = 0;
+  const currency = PRICE_TABLE[models[0]].currency;
+  const breakdown = [];
+  for (const model of models) {
+    const price = PRICE_TABLE[model];
+    const usage = modelUsage[model] || {};
+    const missTokens = Number(usage.inputTokens || 0);
+    const hitTokens = Number(usage.cacheReadInputTokens || 0);
+    const outTokens = Number(usage.outputTokens || 0);
+    const native = (missTokens * price.inMiss + hitTokens * price.inHit + outTokens * price.out) / 1e6;
+    nativeTotal += native;
+    usd += toUsd(native, price.currency);
+    breakdown.push({
+      model,
+      currency: price.currency,
+      input_miss_tokens: missTokens,
+      cache_hit_tokens: hitTokens,
+      output_tokens: outTokens,
+      native_cost: Number(native.toFixed(4)),
+      usd_cost: Number(toUsd(native, price.currency).toFixed(4))
+    });
+  }
+  return {
+    usd: Number(usd.toFixed(4)),
+    source: "recomputed_official_list_price",
+    nativeLabel: `${currency} ${nativeTotal.toFixed(2)}`,
+    reportedUsd,
+    breakdown
+  };
+}
+
+function listRunsWithTrace() {
+  const runsDir = path.join(repoRoot, "runs");
+  if (!fs.existsSync(runsDir)) return [];
+  return fs
+    .readdirSync(runsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => {
+      const traceMtimes = ["opus", "deepseek"]
+        .map((modelId) => path.join(runsDir, entry.name, modelId, "trace.stream.jsonl"))
+        .filter((tracePath) => fs.existsSync(tracePath))
+        .map((tracePath) => fs.statSync(tracePath).mtimeMs);
+      return traceMtimes.length ? { runId: entry.name, mtime: Math.max(...traceMtimes) } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.mtime - a.mtime);
+}
+
+// 解析要对比哪些 run：显式参数优先；否则取最新一个带 trace 的 run；
+// .current-run-id 仅作最后兜底。永远打印来源。
+function resolveTargetRunIds() {
+  const runIds = process.argv.slice(2).filter(Boolean);
+  if (runIds.length > 0) return { runIds, source: "命令行参数" };
+  const withTrace = listRunsWithTrace();
+  if (withTrace.length > 0) return { runIds: [withTrace[0].runId], source: "最新的 runs/*/<model>/trace.stream.jsonl" };
+  const pinnedPath = path.join(repoRoot, ".current-run-id");
+  if (fs.existsSync(pinnedPath)) return { runIds: [fs.readFileSync(pinnedPath, "utf8").trim()], source: ".current-run-id（兜底）" };
+  throw new Error("未给 run_id，且 runs/ 下没有任何带 trace 的 run");
+}
+
+const { runIds: targetRunIds, source: runIdSource } = resolveTargetRunIds();
+console.log(`[compare-traces] runs = ${targetRunIds.join(", ")}  (来源: ${runIdSource})`);
 
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
@@ -154,9 +260,7 @@ function extractSourceDomains(text) {
 }
 
 function looksOfficialOrQuasiOfficialDomain(domain) {
-  return /(^|\.)doubao\.com$|(^|\.)bytedance\.com$|(^|\.)volcengine\.com$|(^|\.)oceanengine\.com$|(^|\.)snssdk\.com$|(^|\.)toutiao\.com$|(^|\.)feishu\.cn$|(^|\.)byteimg\.com$/.test(
-    String(domain)
-  );
+  return TASK_PROFILE.officialDomainPattern.test(String(domain));
 }
 
 function extractNpmScripts(text) {
@@ -170,7 +274,7 @@ function toolResultFailed(resultForTool) {
 }
 
 function summarizeFirstPass(commandRuns, stopHookPasses) {
-  const gateScripts = ["video:check", "security:check", "hook:check", "check"];
+  const gateScripts = TASK_PROFILE.gateScripts;
   const attemptsByScript = Object.fromEntries(gateScripts.map((script) => [script, []]));
   for (const run of commandRuns) {
     for (const script of run.scripts) {
@@ -405,6 +509,15 @@ function extractTrace(runDir, modelId) {
     if (toolUse.name === "Edit" && toolUse.input.file_path && !failed) editPaths.push(toolUse.input.file_path);
   }
   const scriptRuns = extractNpmScripts(commandCorpus);
+  // 读没读规则，必须在脱敏前用原始绝对路径判定：sanitizeForReport 会把
+  // /Users/.../AGENTS.md 整段吃成 [local-path]，导致后面检测不到（曾误判上下文为风险）。
+  const contextReads = {
+    rootAgents: readPaths.some((p) => /\/AGENTS\.md$/.test(p) && !/\/(scripts|reports)\/AGENTS\.md$/.test(p)),
+    scriptsAgents: readPaths.some((p) => /\/scripts\/AGENTS\.md$/.test(p)),
+    reportsAgents: readPaths.some((p) => /\/reports\/AGENTS\.md$/.test(p)),
+    skill: readPaths.some((p) => /\/SKILL\.md$/.test(p)),
+    readme: readPaths.some((p) => /\/README\.md$/.test(p))
+  };
   const strictCheckRan = /REQUIRE_REAL_IMAGES=1[\s\S]*REQUIRE_RESEARCH=1[\s\S]*video:check|REQUIRE_RESEARCH=1[\s\S]*REQUIRE_REAL_IMAGES=1[\s\S]*video:check/.test(commandCorpus);
   const fullCheckRan = /npm run check\b/.test(commandCorpus);
   const webSearchRequests = Object.values(result?.modelUsage || {}).reduce(
@@ -416,6 +529,7 @@ function extractTrace(runDir, modelId) {
   const errorSummary = classifyErrors(toolErrors);
   const finalText = result?.result || "";
   const firstPass = summarizeFirstPass(commandRuns, stopHookPasses);
+  const costInfo = computeRunCostUsd(result);
 
   return {
     path: relToRun(runDir, tracePath),
@@ -430,7 +544,11 @@ function extractTrace(runDir, modelId) {
     durationMs: result?.duration_ms ?? null,
     apiDurationMs: result?.duration_api_ms ?? null,
     turns: result?.num_turns ?? null,
-    totalCostUsd: result?.total_cost_usd ?? null,
+    totalCostUsd: costInfo.usd,
+    costSource: costInfo.source,
+    costNativeLabel: costInfo.nativeLabel,
+    reportedCostUsd: costInfo.reportedUsd,
+    costBreakdown: costInfo.breakdown,
     terminalReason: result?.terminal_reason || result?.subtype || null,
     toolCounts,
     bashCommands: bashCommands.map(sanitizeForReport),
@@ -440,6 +558,7 @@ function extractTrace(runDir, modelId) {
     fullCheckRan,
     firstPass,
     readPaths: unique(readPaths.map(sanitizeForReport)),
+    contextReads,
     failedReadPaths: unique(failedReadPaths.map(sanitizeForReport)),
     writePaths: unique(writePaths.map(sanitizeForReport)),
     editPaths: unique(editPaths.map(sanitizeForReport)),
@@ -508,6 +627,9 @@ function extractArtifacts(runDir, modelId) {
   const serializedTask = JSON.stringify(taskRun);
   const serializedMedia = JSON.stringify(mediaManifest);
   const serializedAudio = JSON.stringify(audioManifest);
+  const failureRecovery = mediaManifest.failure_recovery || {};
+  const media005Recovered =
+    failureRecovery.retried === true && failureRecovery.final_status === "completed";
   const taskRunPendingCount = serializedTask.match(/"status"\s*:\s*"pending"/g)?.length || 0;
   const audioAssets = Array.isArray(finalManifest.audio_assets) ? finalManifest.audio_assets : [];
   const subtitleAssets = finalManifest.subtitle_assets || {};
@@ -644,7 +766,14 @@ function extractArtifacts(runDir, modelId) {
       sourcePath: relToRun(runDir, path.join(outputBase, "task-run.json")),
       pendingCount: taskRunPendingCount,
       hasMedia005: /MEDIA_005/.test(serializedTask) || /MEDIA_005/.test(serializedMedia),
-      hasRetry: /retry|重试|retried/.test(serializedTask) || /retry|重试|retried/.test(serializedMedia)
+      failureRecovery: {
+        sourcePath: relToRun(runDir, path.join(outputBase, "media-manifest.json")),
+        mediaId: failureRecovery.media_id ?? null,
+        forcedFailure: failureRecovery.forced_failure === true,
+        retried: failureRecovery.retried === true,
+        finalStatus: failureRecovery.final_status ?? null,
+        recovered: media005Recovered
+      }
     }
   };
 }
@@ -663,10 +792,10 @@ function tierFromScore(score) {
 function scoreModel(trace, artifacts) {
   const outcomeChecks = [
     artifacts.finalVideo.exists,
-    artifacts.finalVideo.durationSeconds >= 28 && artifacts.finalVideo.durationSeconds <= 32,
-    artifacts.finalVideo.storyboardItems === 3,
+    artifacts.finalVideo.durationSeconds >= TASK_PROFILE.outcome.durationSecondsMin && artifacts.finalVideo.durationSeconds <= TASK_PROFILE.outcome.durationSecondsMax,
+    artifacts.finalVideo.storyboardItems === TASK_PROFILE.outcome.storyboardItems,
     artifacts.finalVideo.usesProviderVideo === false,
-    artifacts.realProvider.completedImages === 3,
+    artifacts.realProvider.completedImages === TASK_PROFILE.outcome.realImageCount,
     artifacts.finalVideo.subtitleAssets.burnedIn === true,
     artifacts.quality.ok,
     artifacts.security.findings === 0,
@@ -675,10 +804,10 @@ function scoreModel(trace, artifacts) {
   const outcome = (outcomeChecks.filter(Boolean).length / outcomeChecks.length) * 5;
 
   const contextChecks = [
-    trace.readPaths.some((item) => /AGENTS\.md$/.test(item)),
-    trace.readPaths.some((item) => /scripts\/AGENTS\.md/.test(item)) || /scripts\/AGENTS\.md/.test(JSON.stringify(trace)),
-    trace.readPaths.some((item) => /reports\/AGENTS\.md/.test(item)) || /reports\/AGENTS\.md/.test(JSON.stringify(trace)),
-    trace.readPaths.some((item) => /skills\/video-workflow\/SKILL\.md/.test(item)) || /skills\/video-workflow\/SKILL\.md/.test(JSON.stringify(trace)),
+    trace.contextReads.rootAgents,
+    trace.contextReads.scriptsAgents,
+    trace.contextReads.reportsAgents,
+    trace.contextReads.skill,
     artifacts.research.exists,
     artifacts.research.domainCount >= 3 || trace.webSearchRequests > 0
   ];
@@ -703,14 +832,15 @@ function scoreModel(trace, artifacts) {
   let execution = 5;
   execution -= Math.min(2.2, trace.severeErrorCount * 0.9 + trace.minorErrorCount * 0.25);
   if (artifacts.taskRun.pendingCount > 0) execution -= 0.3;
+  if (artifacts.taskRun.hasMedia005 && !artifacts.taskRun.failureRecovery.recovered) execution -= 0.8;
   if (!trace.fullCheckRan) execution -= 0.5;
   if (trace.toolErrorKinds.providerFailure && !artifacts.audioProvider.fallback) execution -= 0.4;
 
   let risk = 5;
   if (artifacts.security.findings > 0) risk -= 2;
   if (artifacts.finalVideo.usesProviderVideo !== false) risk -= 1.5;
-  if (artifacts.realProvider.hardCap !== 30) risk -= 0.5;
-  if (artifacts.audioProvider.hardCap && artifacts.audioProvider.hardCap > 30) risk -= 0.5;
+  if (artifacts.realProvider.hardCap !== TASK_PROFILE.hardCap) risk -= 0.5;
+  if (artifacts.audioProvider.hardCap && artifacts.audioProvider.hardCap > TASK_PROFILE.hardCap) risk -= 0.5;
   if (!artifacts.research.hasOfficialCaveat) risk -= 0.3;
   if (artifacts.research.domainCount === 0) risk -= 0.5;
   if (trace.envMentions > 3) risk -= 0.2;
@@ -800,13 +930,15 @@ function buildEvidence(modelId, trace, artifacts) {
     "execution.recovery",
     "执行质量",
     trace.severeErrorCount === 0 ? "positive" : "warning",
-    `工具错误去重后 ${trace.toolErrorCount} 类，严重 ${trace.severeErrorCount} 类；MEDIA_005 retry=${artifacts.taskRun.hasRetry}；一次通过=${trace.firstPass.label}。`,
-    trace.path,
+    `工具错误去重后 ${trace.toolErrorCount} 类，严重 ${trace.severeErrorCount} 类；MEDIA_005 recovered=${artifacts.taskRun.failureRecovery.recovered}；一次通过=${trace.firstPass.label}。`,
+    artifacts.taskRun.failureRecovery.sourcePath,
     {
       tool_error_count: trace.toolErrorCount,
       severe_error_count: trace.severeErrorCount,
       minor_error_count: trace.minorErrorCount,
-      media005_retry: artifacts.taskRun.hasRetry,
+      media005_retry: artifacts.taskRun.failureRecovery.retried,
+      media005_final_status: artifacts.taskRun.failureRecovery.finalStatus,
+      media005_recovered: artifacts.taskRun.failureRecovery.recovered,
       first_pass: trace.firstPass
     }
   );
@@ -953,35 +1085,53 @@ function singleRunSignals(runSummary) {
 
   const opusErrorLoad = opus.trace.severeErrorCount * 3 + opus.trace.minorErrorCount;
   const deepseekErrorLoad = deepseek.trace.severeErrorCount * 3 + deepseek.trace.minorErrorCount;
-  const executionLeader =
-    opusErrorLoad + 1 < deepseekErrorLoad || opus.trace.toolErrorCount + 2 < deepseek.trace.toolErrorCount
+  const opusRecoveryPenalty = opus.artifacts.taskRun.hasMedia005 && !opus.artifacts.taskRun.failureRecovery.recovered ? 3 : 0;
+  const deepseekRecoveryPenalty = deepseek.artifacts.taskRun.hasMedia005 && !deepseek.artifacts.taskRun.failureRecovery.recovered ? 3 : 0;
+  const opusExecutionLoad = opusErrorLoad + opusRecoveryPenalty;
+  const deepseekExecutionLoad = deepseekErrorLoad + deepseekRecoveryPenalty;
+  let executionLeader =
+    opusExecutionLoad + 1 < deepseekExecutionLoad || opus.trace.toolErrorCount + 2 < deepseek.trace.toolErrorCount
       ? "opus"
-      : deepseekErrorLoad + 1 < opusErrorLoad || deepseek.trace.toolErrorCount + 2 < opus.trace.toolErrorCount
+      : deepseekExecutionLoad + 1 < opusExecutionLoad || deepseek.trace.toolErrorCount + 2 < opus.trace.toolErrorCount
         ? "deepseek"
         : "tie";
+  // 错误负担启发式分不出时，按执行质量维度档位破平：维度打分比这个粗阈值更敏感，
+  // 且能保证与内部一致性自检（finding 不得与所映射维度档位矛盾）吻合。
+  if (executionLeader === "tie") {
+    const opusExecTier = tierRankById[opus.scores?.tiers?.executionQuality?.id] ?? 0;
+    const deepseekExecTier = tierRankById[deepseek.scores?.tiers?.executionQuality?.id] ?? 0;
+    if (opusExecTier > deepseekExecTier) executionLeader = "opus";
+    else if (deepseekExecTier > opusExecTier) executionLeader = "deepseek";
+  }
   rows.push(
     compareValues(
       runSummary,
       "execution_recovery_cost",
       "失败恢复和人工接管成本",
-      "严重错误、轻微错误、复验门禁",
+      "MEDIA_005 结构化恢复、严重错误、轻微错误、复验门禁",
       executionLeader,
       executionLeader === "tie" ? "两边恢复成本接近" : `${executionLeader} 的错误负担更低`,
       {
-        opus: opus.trace.path,
-        deepseek: deepseek.trace.path
+        opus: opus.artifacts.taskRun.failureRecovery.sourcePath,
+        deepseek: deepseek.artifacts.taskRun.failureRecovery.sourcePath
       },
       {
         opus: {
           tool_error_count: opus.trace.toolErrorCount,
           severe_error_count: opus.trace.severeErrorCount,
           minor_error_count: opus.trace.minorErrorCount,
+          media005_retry: opus.artifacts.taskRun.failureRecovery.retried,
+          media005_final_status: opus.artifacts.taskRun.failureRecovery.finalStatus,
+          media005_recovered: opus.artifacts.taskRun.failureRecovery.recovered,
           full_check: opus.trace.fullCheckRan
         },
         deepseek: {
           tool_error_count: deepseek.trace.toolErrorCount,
           severe_error_count: deepseek.trace.severeErrorCount,
           minor_error_count: deepseek.trace.minorErrorCount,
+          media005_retry: deepseek.artifacts.taskRun.failureRecovery.retried,
+          media005_final_status: deepseek.artifacts.taskRun.failureRecovery.finalStatus,
+          media005_recovered: deepseek.artifacts.taskRun.failureRecovery.recovered,
           full_check: deepseek.trace.fullCheckRan
         }
       }
@@ -1442,6 +1592,9 @@ function aggregateModel(runSummaries, modelId) {
         read_paths: model.trace.readPaths.length,
         tool_errors: model.trace.toolErrorCount,
         severe_errors: model.trace.severeErrorCount,
+        media005_retry: model.artifacts.taskRun.failureRecovery.retried,
+        media005_final_status: model.artifacts.taskRun.failureRecovery.finalStatus,
+        media005_recovered: model.artifacts.taskRun.failureRecovery.recovered,
         first_pass_rate: model.trace.firstPass.rate,
         first_pass_label: model.trace.firstPass.label,
         security_findings: model.artifacts.security.findings,
@@ -1668,4 +1821,13 @@ function writeAggregate(aggregate) {
 
 const summaries = targetRunIds.map(buildRunSummary);
 for (const summary of summaries) writeRunComparison(summary);
-if (summaries.length > 1) writeAggregate(buildAggregate(summaries));
+let primaryTarget = targetRunIds[0];
+if (summaries.length > 1) {
+  const aggregate = buildAggregate(summaries);
+  writeAggregate(aggregate);
+  primaryTarget = aggregate.runId;
+}
+// 让孤儿指针有维护者：跑完即把 .current-run-id 写成本次处理的渲染目标
+// （多 run 写聚合 id），下游 render 默认就指到正确的最新结果。
+fs.writeFileSync(path.join(repoRoot, ".current-run-id"), `${primaryTarget}\n`);
+console.log(`[compare-traces] .current-run-id → ${primaryTarget}`);

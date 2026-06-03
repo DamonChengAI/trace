@@ -1,9 +1,31 @@
+# ───────── 系统 / 环境 / 密钥(永不入库)─────────
 .DS_Store
 .env
 .env.*
+.current-run-id
+
+# ───────── 工具与浏览器自动化临时输出 ─────────
 outputs/
 trace-output/
-runs/
+.playwright-mcp/
+
+# ───────── 私人飞书文档备份与一次性推送脚本(非作品内容,已移至 ../doubao-private)─────────
+recovery/
+tools/feishu-edit*.mjs
+tools/push-to-feishu.mjs
+
+# ───────── 根目录飞书长截图(临时素材,已移至 ../doubao-private)─────────
+/full.jpeg
+/hero.jpeg
+/s5.jpeg
+
+# ───────── 执行记录 runs/ ─────────
+# 默认忽略全部 run;仅放行一个完整代表性 run（20260603-182255）作为可复查证据
+runs/*
+!runs/20260603-182255/
+
+# 原始 trace 流体积大,默认忽略;显式放行样例 run 内的两份,完整展示执行轨迹
 *.stream.jsonl
 *.trace.jsonl
-.current-run-id
+!runs/20260603-182255/opus/trace.stream.jsonl
+!runs/20260603-182255/deepseek/trace.stream.jsonl

@@ -1,0 +1,1 @@
+Wrapper note: zsh read-only variable name caused wrapper exit after Claude result; trace result subtype is success.

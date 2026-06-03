@@ -5,15 +5,39 @@ import process from "node:process";
 
 const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 
-function currentRunId() {
-  return fs.readFileSync(path.join(repoRoot, ".current-run-id"), "utf8").trim();
+function listRunsWith(relativeFile) {
+  const runsDir = path.join(repoRoot, "runs");
+  if (!fs.existsSync(runsDir)) return [];
+  return fs
+    .readdirSync(runsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => {
+      const target = path.join(runsDir, entry.name, relativeFile);
+      return fs.existsSync(target) ? { runId: entry.name, mtime: fs.statSync(target).mtimeMs } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.mtime - a.mtime);
 }
 
-const runId = process.argv[2] || currentRunId();
+// 解析要渲染哪个 run：显式参数优先；否则取最新一个已生成 metrics 的 run；
+// .current-run-id 仅作最后兜底。永远打印来源，杜绝静默渲染过期数据。
+function resolveRunId() {
+  const arg = process.argv[2];
+  if (arg) return { runId: arg, source: "命令行参数" };
+  const withMetrics = listRunsWith(path.join("comparison", "metrics.json"));
+  if (withMetrics.length > 0) return { runId: withMetrics[0].runId, source: "最新的 runs/*/comparison/metrics.json" };
+  const pinnedPath = path.join(repoRoot, ".current-run-id");
+  if (fs.existsSync(pinnedPath)) return { runId: fs.readFileSync(pinnedPath, "utf8").trim(), source: ".current-run-id（兜底）" };
+  throw new Error("未给 run_id，且 runs/ 下没有任何带 comparison/metrics.json 的 run");
+}
+
+const { runId, source } = resolveRunId();
+console.log(`[render] run = ${runId}  (来源: ${source})`);
 const runDir = path.join(repoRoot, "runs", runId);
 const metricsPath = path.join(runDir, "comparison", "metrics.json");
-const outputPath = path.join(runDir, "interview-review.html");
-const markdownPath = path.join(runDir, "interview-review.md");
+// 数据版备用：写到 .data.* 文件，绝不覆盖手写的正本 interview-review.html / .md
+const outputPath = path.join(runDir, "interview-review.data.html");
+const markdownPath = path.join(runDir, "interview-review.data.md");
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));

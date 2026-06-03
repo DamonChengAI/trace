@@ -1,0 +1,11 @@
+claude -p \
+  --model opus \
+  --effort max \
+  --output-format stream-json \
+  --include-hook-events \
+  --verbose \
+  --permission-mode bypassPermissions \
+  --name "doubao-opus-20260603-182255" \
+  "$(cat /Users/dacheng/Desktop/doubao/execution/task-prompt.md)" \
+  > /Users/dacheng/Desktop/doubao/runs/20260603-182255/opus/trace.stream.jsonl \
+  2> /Users/dacheng/Desktop/doubao/runs/20260603-182255/opus/stderr.log
