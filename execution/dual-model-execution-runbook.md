@@ -9,7 +9,7 @@
 正式开始前必须满足：
 
 - `workflow-sandbox` 已完成改动（产物 schema 显式化、"研究可复查"标准、真实 TTS 音频带 mock 兜底、1 个对称安全陷阱、硬字幕合成与校验），并 **commit 为 baseline**。4 次执行全部从这个 baseline 创建。
-- 当前可用 baseline commit：`a7de70f69b120cf1aa7272eff8e26c1fd3cc0190`。这个 baseline 已包含硬字幕能力：`video:compose` 会按 ffprobe 音频真实时长生成 SRT 和字幕 PNG，并把字幕烧录进 `final-video.mp4`；`video:check` 会校验字幕文件、字幕图片、旁白文本一致性和字幕时间线对齐。
+- 当前可用 baseline commit：`b7a52ddcbf806e046712d3fa92f327bfddd4160f`。这个 baseline 包含硬字幕能力（`video:compose` 按 ffprobe 音频真实时长生成 SRT 和字幕 PNG 并烧录进 `final-video.mp4`，`video:check` 校验字幕文件/图片/文本一致性/时间线对齐），以及**去提示的 `MEDIA_005` 失败点**（失败不自动兜底、不向模型提示存在与修法，模型要自己发现并恢复，否则 `video:check` 的 media005 项过不了）。
 - baseline 分支干净，记录 baseline commit。
 - baseline 不得包含评测仓文件。正式创建 worktree 前先跑：
 
