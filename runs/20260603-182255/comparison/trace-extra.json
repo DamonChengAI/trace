@@ -1,0 +1,163 @@
+{
+  "runId": "20260603-182255",
+  "generatedFrom": "trace-dissect (纯规则)",
+  "opus": {
+    "style": {
+      "thinkingVisible": false,
+      "thinkingBlocks": 0,
+      "read": 32,
+      "glob": 0,
+      "grep": 4,
+      "webSearch": 3,
+      "exploreAgent": false,
+      "traceLines": 294,
+      "totalSteps": 104,
+      "edits": 0
+    },
+    "research": {
+      "domainCount": 7,
+      "authoritativeCount": 6,
+      "authoritativeDomains": [
+        "stcn.com",
+        "stdaily.com",
+        "nbd.com.cn",
+        "xinhuanet.com",
+        "chinadaily.com.cn",
+        "doubao.com"
+      ]
+    },
+    "tokensTotal": 4323147,
+    "dissection": {
+      "其它Bash": {
+        "steps": 25,
+        "errors": 0
+      },
+      "读/探索": {
+        "steps": 32,
+        "errors": 0
+      },
+      "规划": {
+        "steps": 25,
+        "errors": 0
+      },
+      "配音": {
+        "steps": 3,
+        "errors": 0
+      },
+      "联网研究": {
+        "steps": 3,
+        "errors": 0
+      },
+      "脚本/研究产出": {
+        "steps": 5,
+        "errors": 0
+      },
+      "出图": {
+        "steps": 2,
+        "errors": 0
+      },
+      "拼接": {
+        "steps": 3,
+        "errors": 0
+      },
+      "复核(子代理)": {
+        "steps": 1,
+        "errors": 0
+      },
+      "写文件": {
+        "steps": 1,
+        "errors": 0
+      },
+      "检查": {
+        "steps": 4,
+        "errors": 0
+      }
+    },
+    "errorSteps": []
+  },
+  "deepseek": {
+    "style": {
+      "thinkingVisible": true,
+      "thinkingBlocks": 55,
+      "read": 39,
+      "glob": 6,
+      "grep": 8,
+      "webSearch": 1,
+      "exploreAgent": false,
+      "traceLines": 427,
+      "totalSteps": 134,
+      "edits": 3
+    },
+    "research": {
+      "domainCount": 5,
+      "authoritativeCount": 1,
+      "authoritativeDomains": [
+        "thepaper.cn"
+      ]
+    },
+    "tokensTotal": 5685500,
+    "dissection": {
+      "规划": {
+        "steps": 26,
+        "errors": 0
+      },
+      "其它Bash": {
+        "steps": 30,
+        "errors": 0
+      },
+      "读/探索": {
+        "steps": 46,
+        "errors": 0
+      },
+      "联网研究": {
+        "steps": 1,
+        "errors": 0
+      },
+      "脚本/研究产出": {
+        "steps": 13,
+        "errors": 0
+      },
+      "出图": {
+        "steps": 1,
+        "errors": 0
+      },
+      "配音": {
+        "steps": 8,
+        "errors": 2
+      },
+      "拼接": {
+        "steps": 2,
+        "errors": 0
+      },
+      "复核(子代理)": {
+        "steps": 1,
+        "errors": 0
+      },
+      "写文件": {
+        "steps": 2,
+        "errors": 1
+      },
+      "检查": {
+        "steps": 4,
+        "errors": 0
+      }
+    },
+    "errorSteps": [
+      {
+        "step": 114,
+        "tool": "Write",
+        "brief": "subagent-review.md"
+      },
+      {
+        "step": 119,
+        "tool": "Bash",
+        "brief": "rm -f outputs/video-run/audio/*.mp3 outputs/video-"
+      },
+      {
+        "step": 120,
+        "tool": "Bash",
+        "brief": "rm -f outputs/video-run/audio/*.mp3 outputs/video-"
+      }
+    ]
+  }
+}
