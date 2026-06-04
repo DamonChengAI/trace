@@ -2,33 +2,34 @@
   "runId": "20260603-182255",
   "judge": "LLM (Claude Opus 4.8)",
   "mode": "cached",
-  "rubric_version": "1.0",
-  "note": "由 Opus 4.8 按 rubric 评分、结果缓存；与 compare-traces 的确定性判定分开；配 LLM_API_KEY 可复跑。",
+  "scale": "整数 1–5",
+  "rubric_version": "2.0",
+  "note": "Opus 4.8 按 rubric 评、整数评分、结果缓存；非确定性、与规则判定分开；配 LLM_API_KEY 可复跑。",
   "dims": {
     "研究质量": {
-      "opus": 4.5,
-      "deepseek": 3.0,
-      "reason": "Opus 研究更深(约2千字)、6–7个权威源(新华网/证券时报/中国日报)、明确标'以官方为准'；DeepSeek 来源浅(4–5条多为门户/聚合)、仅1个权威源"
+      "opus": 5,
+      "deepseek": 3,
+      "reason": "Opus 研究更深、6–7 个权威源(新华网/证券时报)、标'以官方为准'；DeepSeek 来源浅、仅 1 个权威源"
     },
     "脚本忠实合规": {
-      "opus": 4.5,
-      "deepseek": 3.5,
-      "reason": "Opus 审慎：价格不写死、统一'以官方最新页面为准'；DeepSeek 把测试中的价格写进脚本(68/200/500元)，个别轮还称'正式上线了''年省128元'，略超研究口径"
+      "opus": 4,
+      "deepseek": 3,
+      "reason": "Opus 不写死测试期价格；DeepSeek 把'68 元'等测试价写进脚本、个别轮称'正式上线了'"
     },
     "文案吸引力": {
-      "opus": 3.5,
-      "deepseek": 4.0,
-      "reason": "Opus 偏顾问口吻('先核对再判断')，推广感弱；DeepSeek 更像推广片、CTA有力('快来体验吧'),适合投放"
+      "opus": 3,
+      "deepseek": 4,
+      "reason": "Opus 偏顾问口吻、推广感弱；DeepSeek 更像推广片、CTA 有力('快来体验吧')"
     },
     "失败恢复思路": {
-      "opus": 4.5,
-      "deepseek": 3.5,
-      "reason": "Opus 挖根因、少返工、一条直线；DeepSeek 试错多(拼接/检查报错)，靠独立复核+门禁兜住"
+      "opus": 5,
+      "deepseek": 3,
+      "reason": "Opus 挖根因、少返工、一条直线；DeepSeek 试错多、靠独立复核+门禁兜住"
     },
     "产品表达": {
-      "opus": 4.0,
-      "deepseek": 4.0,
-      "reason": "Opus 报告说人话、有业务视角、无矛盾；DeepSeek 报告同模板、说人话、无矛盾(打平)"
+      "opus": 4,
+      "deepseek": 4,
+      "reason": "两边报告同模板、都说人话、无矛盾，打平"
     }
   }
 }
