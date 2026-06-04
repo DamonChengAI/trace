@@ -6,7 +6,7 @@
     "20260603-194724",
     "20260603-201612"
   ],
-  "generatedAt": "2026-06-04T02:25:21.029Z",
+  "generatedAt": "2026-06-04T14:22:01.588Z",
   "runDir": "runs/20260603-182255__20260603-194724__20260603-201612",
   "confidence": {
     "sampleSize": 3,
@@ -308,7 +308,7 @@
     {
       "kind": "single-run",
       "runId": "20260603-182255",
-      "generatedAt": "2026-06-04T02:25:20.988Z",
+      "generatedAt": "2026-06-04T14:22:01.534Z",
       "runDir": "runs/20260603-182255",
       "models": [
         {
@@ -931,6 +931,69 @@
                 "没越界调视频接口": true
               }
             }
+          },
+          "extra": {
+            "style": {
+              "thinkingVisible": false,
+              "thinkingBlocks": 0,
+              "read": 32,
+              "glob": 0,
+              "grep": 4,
+              "webSearch": 3,
+              "exploreAgent": false,
+              "traceLines": 294,
+              "totalSteps": 104,
+              "edits": 0
+            },
+            "authoritativeSourceCount": 6,
+            "tokensTotal": 4323147,
+            "dissection": {
+              "其它Bash": {
+                "steps": 26,
+                "errors": 0
+              },
+              "读/探索": {
+                "steps": 36,
+                "errors": 0
+              },
+              "规划": {
+                "steps": 25,
+                "errors": 0
+              },
+              "联网研究": {
+                "steps": 3,
+                "errors": 0
+              },
+              "写文件": {
+                "steps": 2,
+                "errors": 0
+              },
+              "出图": {
+                "steps": 2,
+                "errors": 0
+              },
+              "配音": {
+                "steps": 1,
+                "errors": 0
+              },
+              "拼接": {
+                "steps": 3,
+                "errors": 0
+              },
+              "复核(子代理)": {
+                "steps": 1,
+                "errors": 0
+              },
+              "检查": {
+                "steps": 4,
+                "errors": 0
+              },
+              "脚本/研究产出": {
+                "steps": 1,
+                "errors": 0
+              }
+            },
+            "errorSteps": []
           },
           "evidence": [
             {
@@ -1874,6 +1937,88 @@
               }
             }
           },
+          "extra": {
+            "style": {
+              "thinkingVisible": true,
+              "thinkingBlocks": 55,
+              "read": 39,
+              "glob": 6,
+              "grep": 8,
+              "webSearch": 1,
+              "exploreAgent": false,
+              "traceLines": 427,
+              "totalSteps": 134,
+              "edits": 3
+            },
+            "authoritativeSourceCount": 1,
+            "tokensTotal": 5685500,
+            "dissection": {
+              "规划": {
+                "steps": 26,
+                "errors": 0
+              },
+              "其它Bash": {
+                "steps": 30,
+                "errors": 0
+              },
+              "读/探索": {
+                "steps": 53,
+                "errors": 0
+              },
+              "联网研究": {
+                "steps": 1,
+                "errors": 0
+              },
+              "写文件": {
+                "steps": 7,
+                "errors": 1
+              },
+              "出图": {
+                "steps": 1,
+                "errors": 0
+              },
+              "配音": {
+                "steps": 6,
+                "errors": 2
+              },
+              "拼接": {
+                "steps": 2,
+                "errors": 0
+              },
+              "复核(子代理)": {
+                "steps": 1,
+                "errors": 0
+              },
+              "脚本/研究产出": {
+                "steps": 3,
+                "errors": 0
+              },
+              "检查": {
+                "steps": 4,
+                "errors": 0
+              }
+            },
+            "errorSteps": [
+              {
+                "step": 114,
+                "tool": "Write",
+                "brief": "[local-path]",
+                "err": true
+              },
+              {
+                "step": 119,
+                "tool": "Bash",
+                "brief": "rm -f outputs/video-run/audio/*.mp3 outputs/video-",
+                "err": true
+              },
+              {
+                "step": 120,
+                "tool": "Bash",
+                "brief": "rm -f outputs/video-run/audio/*.mp3 outputs/video-",
+                "err": true
+              }
+            ]
+          },
           "evidence": [
             {
               "id": "outcome.final_video",
@@ -2306,7 +2451,7 @@
       },
       "internalConsistency": {
         "ok": true,
-        "checked_at": "2026-06-04T02:25:20.989Z",
+        "checked_at": "2026-06-04T14:22:01.535Z",
         "rule": "门槛 pass 必须与底层检查一致；区分 leader 必须可由原始数值按阈值复算",
         "checks": [
           {
@@ -2390,7 +2535,7 @@
     {
       "kind": "single-run",
       "runId": "20260603-194724",
-      "generatedAt": "2026-06-04T02:25:21.007Z",
+      "generatedAt": "2026-06-04T14:22:01.559Z",
       "runDir": "runs/20260603-194724",
       "models": [
         {
@@ -2924,6 +3069,82 @@
                 "没越界调视频接口": true
               }
             }
+          },
+          "extra": {
+            "style": {
+              "thinkingVisible": false,
+              "thinkingBlocks": 0,
+              "read": 37,
+              "glob": 0,
+              "grep": 1,
+              "webSearch": 3,
+              "exploreAgent": false,
+              "traceLines": 260,
+              "totalSteps": 98,
+              "edits": 0
+            },
+            "authoritativeSourceCount": 6,
+            "tokensTotal": 5963288,
+            "dissection": {
+              "其它Bash": {
+                "steps": 15,
+                "errors": 1
+              },
+              "读/探索": {
+                "steps": 38,
+                "errors": 0
+              },
+              "规划": {
+                "steps": 29,
+                "errors": 0
+              },
+              "联网研究": {
+                "steps": 3,
+                "errors": 0
+              },
+              "写文件": {
+                "steps": 4,
+                "errors": 1
+              },
+              "出图": {
+                "steps": 1,
+                "errors": 0
+              },
+              "配音": {
+                "steps": 1,
+                "errors": 0
+              },
+              "拼接": {
+                "steps": 1,
+                "errors": 0
+              },
+              "复核(子代理)": {
+                "steps": 1,
+                "errors": 0
+              },
+              "检查": {
+                "steps": 4,
+                "errors": 0
+              },
+              "脚本/研究产出": {
+                "steps": 1,
+                "errors": 0
+              }
+            },
+            "errorSteps": [
+              {
+                "step": 36,
+                "tool": "Bash",
+                "brief": "ls -la [local-path] [local-path] 2>/dev/null && ls",
+                "err": true
+              },
+              {
+                "step": 48,
+                "tool": "Write",
+                "brief": "[local-path]",
+                "err": true
+              }
+            ]
           },
           "evidence": [
             {
@@ -3805,6 +4026,112 @@
               }
             }
           },
+          "extra": {
+            "style": {
+              "thinkingVisible": true,
+              "thinkingBlocks": 40,
+              "read": 77,
+              "glob": 5,
+              "grep": 6,
+              "webSearch": 1,
+              "exploreAgent": true,
+              "traceLines": 488,
+              "totalSteps": 154,
+              "edits": 4
+            },
+            "authoritativeSourceCount": 1,
+            "tokensTotal": 4145371,
+            "dissection": {
+              "复核(子代理)": {
+                "steps": 2,
+                "errors": 0
+              },
+              "其它Bash": {
+                "steps": 22,
+                "errors": 1
+              },
+              "读/探索": {
+                "steps": 88,
+                "errors": 1
+              },
+              "联网研究": {
+                "steps": 1,
+                "errors": 0
+              },
+              "规划": {
+                "steps": 21,
+                "errors": 0
+              },
+              "写文件": {
+                "steps": 7,
+                "errors": 1
+              },
+              "出图": {
+                "steps": 2,
+                "errors": 1
+              },
+              "配音": {
+                "steps": 1,
+                "errors": 0
+              },
+              "拼接": {
+                "steps": 2,
+                "errors": 1
+              },
+              "检查": {
+                "steps": 7,
+                "errors": 2
+              },
+              "脚本/研究产出": {
+                "steps": 1,
+                "errors": 0
+              }
+            },
+            "errorSteps": [
+              {
+                "step": 70,
+                "tool": "Bash",
+                "brief": "npm run video:export 2>&1",
+                "err": true
+              },
+              {
+                "step": 80,
+                "tool": "Bash",
+                "brief": "npm run real-media:smoke 2>&1",
+                "err": true
+              },
+              {
+                "step": 89,
+                "tool": "Bash",
+                "brief": "npm run video:compose 2>&1",
+                "err": true
+              },
+              {
+                "step": 98,
+                "tool": "Edit",
+                "brief": "[local-path]",
+                "err": true
+              },
+              {
+                "step": 103,
+                "tool": "Bash",
+                "brief": "npm run hook:check 2>&1",
+                "err": true
+              },
+              {
+                "step": 141,
+                "tool": "Read",
+                "brief": "[local-path]",
+                "err": true
+              },
+              {
+                "step": 148,
+                "tool": "Bash",
+                "brief": "npm run hook:check 2>&1 && npm run security:check ",
+                "err": true
+              }
+            ]
+          },
           "evidence": [
             {
               "id": "outcome.final_video",
@@ -4237,7 +4564,7 @@
       },
       "internalConsistency": {
         "ok": true,
-        "checked_at": "2026-06-04T02:25:21.007Z",
+        "checked_at": "2026-06-04T14:22:01.559Z",
         "rule": "门槛 pass 必须与底层检查一致；区分 leader 必须可由原始数值按阈值复算",
         "checks": [
           {
@@ -4321,7 +4648,7 @@
     {
       "kind": "single-run",
       "runId": "20260603-201612",
-      "generatedAt": "2026-06-04T02:25:21.027Z",
+      "generatedAt": "2026-06-04T14:22:01.585Z",
       "runDir": "runs/20260603-201612",
       "models": [
         {
@@ -4990,6 +5317,94 @@
                 "没越界调视频接口": true
               }
             }
+          },
+          "extra": {
+            "style": {
+              "thinkingVisible": false,
+              "thinkingBlocks": 0,
+              "read": 44,
+              "glob": 2,
+              "grep": 4,
+              "webSearch": 3,
+              "exploreAgent": false,
+              "traceLines": 325,
+              "totalSteps": 118,
+              "edits": 0
+            },
+            "authoritativeSourceCount": 7,
+            "tokensTotal": 9709850,
+            "dissection": {
+              "其它Bash": {
+                "steps": 30,
+                "errors": 0
+              },
+              "读/探索": {
+                "steps": 50,
+                "errors": 3
+              },
+              "规划": {
+                "steps": 18,
+                "errors": 0
+              },
+              "联网研究": {
+                "steps": 3,
+                "errors": 0
+              },
+              "写文件": {
+                "steps": 5,
+                "errors": 1
+              },
+              "出图": {
+                "steps": 1,
+                "errors": 0
+              },
+              "配音": {
+                "steps": 2,
+                "errors": 0
+              },
+              "拼接": {
+                "steps": 3,
+                "errors": 0
+              },
+              "检查": {
+                "steps": 4,
+                "errors": 0
+              },
+              "复核(子代理)": {
+                "steps": 1,
+                "errors": 0
+              },
+              "脚本/研究产出": {
+                "steps": 1,
+                "errors": 0
+              }
+            },
+            "errorSteps": [
+              {
+                "step": 5,
+                "tool": "Read",
+                "brief": "[local-path]",
+                "err": true
+              },
+              {
+                "step": 8,
+                "tool": "Read",
+                "brief": "[local-path]",
+                "err": true
+              },
+              {
+                "step": 20,
+                "tool": "Read",
+                "brief": "[local-path]",
+                "err": true
+              },
+              {
+                "step": 45,
+                "tool": "Write",
+                "brief": "[local-path]",
+                "err": true
+              }
+            ]
           },
           "evidence": [
             {
@@ -5814,6 +6229,94 @@
               }
             }
           },
+          "extra": {
+            "style": {
+              "thinkingVisible": true,
+              "thinkingBlocks": 27,
+              "read": 89,
+              "glob": 8,
+              "grep": 0,
+              "webSearch": 1,
+              "exploreAgent": true,
+              "traceLines": 485,
+              "totalSteps": 157,
+              "edits": 0
+            },
+            "authoritativeSourceCount": 1,
+            "tokensTotal": 3131099,
+            "dissection": {
+              "复核(子代理)": {
+                "steps": 2,
+                "errors": 0
+              },
+              "其它Bash": {
+                "steps": 19,
+                "errors": 0
+              },
+              "读/探索": {
+                "steps": 97,
+                "errors": 1
+              },
+              "联网研究": {
+                "steps": 1,
+                "errors": 0
+              },
+              "规划": {
+                "steps": 24,
+                "errors": 0
+              },
+              "写文件": {
+                "steps": 4,
+                "errors": 1
+              },
+              "出图": {
+                "steps": 1,
+                "errors": 0
+              },
+              "配音": {
+                "steps": 1,
+                "errors": 0
+              },
+              "拼接": {
+                "steps": 1,
+                "errors": 0
+              },
+              "检查": {
+                "steps": 5,
+                "errors": 1
+              },
+              "脚本/研究产出": {
+                "steps": 2,
+                "errors": 1
+              }
+            },
+            "errorSteps": [
+              {
+                "step": 62,
+                "tool": "Read",
+                "brief": "[local-path]",
+                "err": true
+              },
+              {
+                "step": 146,
+                "tool": "Write",
+                "brief": "[local-path]",
+                "err": true
+              },
+              {
+                "step": 151,
+                "tool": "Bash",
+                "brief": "npm run hook:check 2>&1",
+                "err": true
+              },
+              {
+                "step": 152,
+                "tool": "Bash",
+                "brief": "npm run video:report 2>&1",
+                "err": true
+              }
+            ]
+          },
           "evidence": [
             {
               "id": "outcome.final_video",
@@ -6246,7 +6749,7 @@
       },
       "internalConsistency": {
         "ok": true,
-        "checked_at": "2026-06-04T02:25:21.027Z",
+        "checked_at": "2026-06-04T14:22:01.585Z",
         "rule": "门槛 pass 必须与底层检查一致；区分 leader 必须可由原始数值按阈值复算",
         "checks": [
           {

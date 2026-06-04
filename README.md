@@ -14,8 +14,7 @@
 
 | 程序 | 角色 | 怎么干 |
 |---|---|---|
-| [`tools/compare-traces.mjs`](tools/compare-traces.mjs) | grader（主力·规则层） | 抽信号 → 判 3 门槛(过/不过)＋区分(阈值定胜负) → `metrics.json`＋`report.md` |
-| [`tools/trace-dissect.mjs`](tools/trace-dissect.mjs) | 解剖/补充信号（规则层） | 算权威源数、token 分解、执行风格、trace 逐步解剖（纯规则、零 LLM） |
+| [`tools/compare-traces.mjs`](tools/compare-traces.mjs) | grader（规则层·主力） | 抽信号(含权威源/token 分解/执行风格/trace 逐步解剖) → 判门槛(过/不过)＋区分(阈值定胜负) → `metrics.json`＋`report.md` |
 | [`tools/llm-quality-judge.mjs`](tools/llm-quality-judge.mjs) | LLM 软质量层 | 按 rubric 评 研究/脚本/恢复思路/文案/表达，Opus 4.8、缓存、配 key 可复跑 |
 | [`tools/check-sandbox-baseline.mjs`](tools/check-sandbox-baseline.mjs) | 公平性校验 | 跑前扫"考场"，防被测模型偷看评分标准（防泄题） |
 | [`tools/render-interview-html.mjs`](tools/render-interview-html.mjs) | 展示器（备用） | `metrics.json` → 一页 HTML，仅作数据对照 |
@@ -43,12 +42,11 @@
 
 ```text
 1 读 trace + manifest          逐行读动作/结果、读每步产物
-2 抽原始信号（计数/正则）        成本/耗时/turns/来源/报错/一次通过/canary/读规则/恢复
+2 抽原始信号（计数/正则）        成本/耗时/turns/来源/报错/一次通过/canary/读规则/恢复 + 权威源/token/执行风格/trace 解剖
 3 判 3 门槛                    一组布尔检查全为真即"过"；两边都过即可
 4 判区分                       按阈值定 leader（来源≥2 / 成本≥$0.25 / 耗时≥60s / 报错加权≥2）
-5 trace-dissect               算权威源、token 分解、执行风格、trace 逐步解剖（规则层）
-6 llm-quality-judge           Opus 4.8 按 rubric 评软质量（缓存；非确定性、分开标注）
-7 n=3 稳定性聚合 + 8 脱敏 → metrics.json / report.md / trace-extra.json / llm-quality.json
+5 llm-quality-judge           Opus 4.8 按 rubric 评软质量（缓存；非确定性、分开标注）
+6 n=3 稳定性聚合 + 7 脱敏 → metrics.json / report.md / llm-quality.json
 内部一致性自检：门槛 pass=底层检查、区分 leader 可复算，否则拒绝出结果。
 ```
 
@@ -89,8 +87,7 @@
 
 ```bash
 node tools/check-sandbox-baseline.mjs <workflow-sandbox 路径>          # 防泄题
-node tools/compare-traces.mjs   20260603-182255 20260603-194724 20260603-201612   # 规则层 + n=3 聚合
-node tools/trace-dissect.mjs    20260603-182255 20260603-194724 20260603-201612   # 解剖/风格/权威源/token
+node tools/compare-traces.mjs   20260603-182255 20260603-194724 20260603-201612   # 规则层全部信号+判定+n=3 聚合
 node tools/llm-quality-judge.mjs 20260603-182255 20260603-194724 20260603-201612  # 软质量(默认读缓存；配 LLM_API_KEY 真跑)
 node tools/render-interview-html.mjs                                   # 备用 HTML
 ```
@@ -104,8 +101,8 @@ node tools/render-interview-html.mjs                                   # 备用 
 ## 十一、仓库怎么读
 
 ```text
-tools/        ★ grader 工具：规则层(compare-traces / trace-dissect) + LLM 软质量层(llm-quality-judge)
-runs/         三轮执行样例：双模型原始 trace + 产物 + metrics + trace-extra + llm-quality
+tools/        ★ grader 工具：规则层(compare-traces) + LLM 软质量层(llm-quality-judge)
+runs/         三轮执行样例：双模型原始 trace + 产物 + metrics + llm-quality
 AGENTS.md     项目目标与边界
 plans/ execution/ references/   评测任务与执行规范（背景，按需翻）
 ```

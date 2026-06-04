@@ -973,16 +973,84 @@ function buildEvidence(modelId, trace, artifacts) {
   return evidence;
 }
 
+// ── 补充信号（合并自原 trace-dissect，纯规则）：权威源、token 总量、执行风格、trace 逐步解剖 ──
+const AUTHORITATIVE_DOMAINS = new Set([
+  "xinhuanet.com", "stcn.com", "stdaily.com", "chinadaily.com.cn", "nbd.com.cn", "thepaper.cn",
+  "gmw.cn", "caixinglobal.com", "caixin.com", "sznews.com", "people.com.cn", "cctv.com",
+  "yicai.com", "21jingji.com", "doubao.com", "volcengine.com"
+]);
+function phaseOfStep(tool, brief) {
+  const b = (brief || "").toLowerCase();
+  if (tool === "WebSearch") return "联网研究";
+  if (/real-media:smoke|real-image/.test(b)) return "出图";
+  if (/real-audio|tts/.test(b)) return "配音";
+  if (/video:compose/.test(b)) return "拼接";
+  if (/video:check|security:check|hook:check|npm run check/.test(b)) return "检查";
+  if (tool === "Agent") return "复核(子代理)";
+  if (/storyboard|research-notes|video:report/.test(b)) return "脚本/研究产出";
+  if (["Read", "Glob", "Grep"].includes(tool)) return "读/探索";
+  if (["TaskCreate", "TaskUpdate"].includes(tool)) return "规划";
+  if (["Write", "Edit"].includes(tool)) return "写文件";
+  return "其它Bash";
+}
+function extractExtra(runDir, modelId, sourceDomains) {
+  const { events } = parseJsonl(path.join(runDir, modelId, "trace.stream.jsonl"));
+  const traceLines = events.length;
+  const toolCounts = {};
+  let thinkingBlocks = 0, exploreAgent = false, tokensTotal = 0;
+  const steps = [];
+  for (const event of events) {
+    walk(event, (node) => {
+      if (node.type === "thinking" && node.thinking) thinkingBlocks += 1;
+      if (node.type === "tool_use") {
+        toolCounts[node.name] = (toolCounts[node.name] || 0) + 1;
+        if (node.name === "Agent" && /explor/i.test(String((node.input || {}).subagent_type || ""))) exploreAgent = true;
+      }
+    });
+    const content = event.message && Array.isArray(event.message.content) ? event.message.content : null;
+    if (event.type === "assistant" && content) {
+      for (const c of content) if (c.type === "tool_use") {
+        const a = c.input || {};
+        steps.push({ tool: c.name, brief: sanitizeForReport(String(a.command || a.file_path || a.query || a.pattern || a.subagent_type || "")), err: null });
+      }
+    }
+    if (event.type === "user" && content) {
+      for (const c of content) if (c.type === "tool_result" && steps.length && steps[steps.length - 1].err === null) steps[steps.length - 1].err = Boolean(c.is_error);
+    }
+    if (event.type === "result") {
+      const mu = event.modelUsage || {};
+      for (const u of Object.values(mu)) tokensTotal += ["inputTokens", "cacheReadInputTokens", "cacheCreationInputTokens", "outputTokens"].reduce((s, k) => s + (Number(u[k]) || 0), 0);
+    }
+  }
+  const dissection = {};
+  for (const s of steps) {
+    const phase = phaseOfStep(s.tool, s.brief);
+    dissection[phase] = dissection[phase] || { steps: 0, errors: 0 };
+    dissection[phase].steps += 1;
+    if (s.err) dissection[phase].errors += 1;
+  }
+  const domains = (sourceDomains || []).map((d) => String(d).replace(/^www\./, ""));
+  return {
+    style: { thinkingVisible: thinkingBlocks > 0, thinkingBlocks, read: toolCounts.Read || 0, glob: toolCounts.Glob || 0, grep: toolCounts.Grep || 0, webSearch: toolCounts.WebSearch || 0, exploreAgent, traceLines, totalSteps: steps.length, edits: toolCounts.Edit || 0 },
+    authoritativeSourceCount: domains.filter((d) => AUTHORITATIVE_DOMAINS.has(d)).length,
+    tokensTotal,
+    dissection,
+    errorSteps: steps.map((s, i) => ({ step: i + 1, tool: s.tool, brief: s.brief.slice(0, 50), err: s.err })).filter((s) => s.err)
+  };
+}
+
 function modelSummary(runDir, config) {
   const trace = extractTrace(runDir, config.id);
   const artifacts = extractArtifacts(runDir, config.id);
   const gates = gateChecks(trace, artifacts);
+  const extra = extractExtra(runDir, config.id, artifacts.research.sourceDomains);
   return {
     id: config.id,
     label: config.label,
     trace,
     artifacts,
     gates,
+    extra,
     evidence: buildEvidence(config.id, trace, artifacts)
   };
 }
