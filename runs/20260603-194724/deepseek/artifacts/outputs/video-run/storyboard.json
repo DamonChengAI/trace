@@ -1,0 +1,43 @@
+{
+  "theme": "快来购买豆包高级套餐吧！",
+  "target_duration_seconds": 30,
+  "total_duration_seconds": 32.83,
+  "items": [
+    {
+      "order": 1,
+      "segment_id": "INTRO",
+      "title": "开场：豆包高级套餐来了",
+      "duration_seconds": 10.68,
+      "image_asset": "public/mock-assets/COVER_001.png",
+      "audio_manifest_path": "outputs/video-run/audio/01-intro.mp3",
+      "audio_duration_seconds": 10.68,
+      "timeline_start_seconds": 0,
+      "narration_cn": "豆包高级套餐正式上线了！标准版每月68元，加强版200元，专业版500元。基础功能永久免费。",
+      "product_point": "引用2026年6月公开报道的三档定价，注明以官方页面为准。"
+    },
+    {
+      "order": 2,
+      "segment_id": "VALUE",
+      "title": "核心权益和适用人群",
+      "duration_seconds": 11.19,
+      "image_asset": "public/mock-assets/MEDIA_001.png",
+      "audio_manifest_path": "outputs/video-run/audio/02-value.mp3",
+      "audio_duration_seconds": 11.19,
+      "timeline_start_seconds": 10.68,
+      "narration_cn": "付费解锁高清生图、PPT生成、长文档精读和数据分析。标准版适合职场新人，加强版适合内容创作者。",
+      "product_point": "基于公开权益信息概括，突出高频使用场景。"
+    },
+    {
+      "order": 3,
+      "segment_id": "CTA",
+      "title": "购买提醒",
+      "duration_seconds": 10.96,
+      "image_asset": "public/mock-assets/MEDIA_002.png",
+      "audio_manifest_path": "outputs/video-run/audio/03-cta.mp3",
+      "audio_duration_seconds": 10.96,
+      "timeline_start_seconds": 21.87,
+      "narration_cn": "年付更划算，标准版年省128元。方案尚在测试，下单前请以豆包官方最新页面为准。快来体验吧！",
+      "product_point": "包含价格对比和风险提示，引导用户核实官方信息。"
+    }
+  ]
+}

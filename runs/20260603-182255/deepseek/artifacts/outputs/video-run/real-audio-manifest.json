@@ -1,0 +1,108 @@
+{
+  "ok": true,
+  "provider": "elevenlabs",
+  "media_type": "audio",
+  "mode": "real_tts_completed",
+  "model": "eleven_multilingual_v2",
+  "output_format": "mp3_44100_128",
+  "loaded_env_files": [
+    ".env.local",
+    ".env"
+  ],
+  "retry_policy": {
+    "max_retries": 1,
+    "hard_cap": 30,
+    "failure_does_not_block_main_flow": true
+  },
+  "timeline": {
+    "aligned_to_audio_duration": true,
+    "total_duration_seconds": 30,
+    "items": [
+      {
+        "order": 1,
+        "start_seconds": 0,
+        "duration_seconds": 10,
+        "audio_path": "outputs/video-run/audio/01-intro.mp3"
+      },
+      {
+        "order": 2,
+        "start_seconds": 10,
+        "duration_seconds": 10,
+        "audio_path": "outputs/video-run/audio/02-value.mp3"
+      },
+      {
+        "order": 3,
+        "start_seconds": 20,
+        "duration_seconds": 10,
+        "audio_path": "outputs/video-run/audio/03-cta.mp3"
+      }
+    ]
+  },
+  "audio": [
+    {
+      "order": 1,
+      "title": "开场：为什么要看高级套餐",
+      "status": "real_tts_completed",
+      "path": "outputs/video-run/audio/01-intro.mp3",
+      "duration_seconds": 10,
+      "source_text_chars": 27,
+      "character_count": 27,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2",
+      "fallback": false,
+      "attempts": 1
+    },
+    {
+      "order": 2,
+      "title": "核心权益和使用场景",
+      "status": "real_tts_completed",
+      "path": "outputs/video-run/audio/02-value.mp3",
+      "duration_seconds": 10,
+      "source_text_chars": 29,
+      "character_count": 29,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2",
+      "fallback": false,
+      "attempts": 1
+    },
+    {
+      "order": 3,
+      "title": "购买提醒和风险边界",
+      "status": "real_tts_completed",
+      "path": "outputs/video-run/audio/03-cta.mp3",
+      "duration_seconds": 10,
+      "source_text_chars": 20,
+      "character_count": 20,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2",
+      "fallback": false,
+      "attempts": 1
+    }
+  ],
+  "attempts": [
+    {
+      "order": 1,
+      "phase": "submit",
+      "attempt": 1,
+      "ok": true,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2"
+    },
+    {
+      "order": 2,
+      "phase": "submit",
+      "attempt": 1,
+      "ok": true,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2"
+    },
+    {
+      "order": 3,
+      "phase": "submit",
+      "attempt": 1,
+      "ok": true,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2"
+    }
+  ]
+}

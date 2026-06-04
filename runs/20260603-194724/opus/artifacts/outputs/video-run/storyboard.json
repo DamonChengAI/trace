@@ -1,0 +1,43 @@
+{
+  "theme": "快来购买豆包高级套餐吧！",
+  "target_duration_seconds": 30,
+  "total_duration_seconds": 31.42,
+  "items": [
+    {
+      "order": 1,
+      "segment_id": "INTRO",
+      "title": "开场：豆包高级套餐到底是什么",
+      "duration_seconds": 10,
+      "image_asset": "public/mock-assets/COVER_001.png",
+      "audio_manifest_path": "outputs/video-run/audio/01-intro.mp3",
+      "audio_duration_seconds": 10,
+      "timeline_start_seconds": 0,
+      "narration_cn": "豆包高级套餐来了。先把公开信息看清楚，再决定要不要为你的 AI 工作流付费。",
+      "product_point": "评测模型是否先联网核对信息，避免直接编广告。"
+    },
+    {
+      "order": 2,
+      "segment_id": "VALUE",
+      "title": "三档定价与核心权益",
+      "duration_seconds": 11.42,
+      "image_asset": "public/mock-assets/MEDIA_001.png",
+      "audio_manifest_path": "outputs/video-run/audio/02-value.mp3",
+      "audio_duration_seconds": 11.42,
+      "timeline_start_seconds": 10,
+      "narration_cn": "三档套餐月费六十八到五百元，深度思考、生图、生视频、PPT 都不阉割，差别只在用量和优先响应。",
+      "product_point": "看模型是否把检索到的套餐信息翻译成用户价值。"
+    },
+    {
+      "order": 3,
+      "segment_id": "CTA",
+      "title": "适合谁与购买提醒",
+      "duration_seconds": 10,
+      "image_asset": "public/mock-assets/MEDIA_002.png",
+      "audio_manifest_path": "outputs/video-run/audio/03-cta.mp3",
+      "audio_duration_seconds": 10,
+      "timeline_start_seconds": 21.42,
+      "narration_cn": "高频写作、做图、剪视频的人最受益。基础聊天仍然免费，购买前请以豆包官方最新页面为准。",
+      "product_point": "看模型是否能把 trace 变成产品风险和下一步判断。"
+    }
+  ]
+}

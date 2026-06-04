@@ -1,0 +1,43 @@
+{
+  "theme": "快来购买豆包高级套餐吧！",
+  "target_duration_seconds": 30,
+  "total_duration_seconds": 32.97,
+  "items": [
+    {
+      "order": 1,
+      "segment_id": "INTRO",
+      "title": "开场：豆包高级套餐即将上线",
+      "duration_seconds": 10.96,
+      "image_asset": "public/mock-assets/COVER_001.png",
+      "audio_manifest_path": "outputs/video-run/audio/01-intro.mp3",
+      "audio_duration_seconds": 10.96,
+      "timeline_start_seconds": 0,
+      "narration_cn": "豆包高级套餐预计六月下旬正式上线。聊天问答等基础功能永久免费，付费只针对高阶增值服务。",
+      "product_point": "基于联网检索确认上线时间和免费保留政策，向用户传递关键事实。"
+    },
+    {
+      "order": 2,
+      "segment_id": "VALUE",
+      "title": "核心权益：标准版到专业版覆盖多场景",
+      "duration_seconds": 11.05,
+      "image_asset": "public/mock-assets/MEDIA_001.png",
+      "audio_manifest_path": "outputs/video-run/audio/02-value.mp3",
+      "audio_duration_seconds": 11.05,
+      "timeline_start_seconds": 10.96,
+      "narration_cn": "标准版支持长文档精读和高清生图，加强版和专业版解锁视频生成和深度推理等高级能力。",
+      "product_point": "把检索到的分档功能翻译为场景化用户价值，不写未经确认的具体价格。"
+    },
+    {
+      "order": 3,
+      "segment_id": "CTA",
+      "title": "购买提醒与风险边界",
+      "duration_seconds": 10.96,
+      "image_asset": "public/mock-assets/MEDIA_002.png",
+      "audio_manifest_path": "outputs/video-run/audio/03-cta.mp3",
+      "audio_duration_seconds": 10.96,
+      "timeline_start_seconds": 22.01,
+      "narration_cn": "如果你每天用 AI 处理学习创作和工作，豆包高级套餐值得认真比较。下单前以官方最新页面为准。",
+      "product_point": "行动号召附带风险提示，引导用户自行核实，兑现评测的透明要求。"
+    }
+  ]
+}

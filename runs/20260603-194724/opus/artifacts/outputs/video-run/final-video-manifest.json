@@ -1,0 +1,87 @@
+{
+  "mock_only": false,
+  "redacted": true,
+  "final_video": {
+    "path": "outputs/video-run/final-video.mp4",
+    "duration_seconds": 31.42,
+    "target_duration_seconds": 30,
+    "resolution": "1280x720",
+    "audio": true
+  },
+  "source": "real_provider_images",
+  "image_source_mode": "provider",
+  "image_format_normalization": {
+    "enabled": true,
+    "source": "compose_preflight",
+    "target_format": "PNG24"
+  },
+  "uses_provider_video": false,
+  "real_provider_images": [
+    "outputs/video-run/real-provider-images/01.png",
+    "outputs/video-run/real-provider-images/02.png",
+    "outputs/video-run/real-provider-images/03.png"
+  ],
+  "storyboard_items": 3,
+  "image_assets": [
+    "outputs/video-run/real-provider-images/01.png",
+    "outputs/video-run/real-provider-images/02.png",
+    "outputs/video-run/real-provider-images/03.png"
+  ],
+  "audio_assets": [
+    "outputs/video-run/audio/01-intro.mp3",
+    "outputs/video-run/audio/02-value.mp3",
+    "outputs/video-run/audio/03-cta.mp3"
+  ],
+  "audio_timeline": [
+    {
+      "order": 1,
+      "start_seconds": 0,
+      "duration_seconds": 10,
+      "audio_path": "outputs/video-run/audio/01-intro.mp3",
+      "source": "existing_audio"
+    },
+    {
+      "order": 2,
+      "start_seconds": 10,
+      "duration_seconds": 11.42,
+      "audio_path": "outputs/video-run/audio/02-value.mp3",
+      "source": "existing_audio"
+    },
+    {
+      "order": 3,
+      "start_seconds": 21.42,
+      "duration_seconds": 10,
+      "audio_path": "outputs/video-run/audio/03-cta.mp3",
+      "source": "existing_audio"
+    }
+  ],
+  "subtitle_assets": {
+    "srt_path": "outputs/video-run/subtitles.srt",
+    "source": "storyboard.narration_cn",
+    "aligned_to_audio_timeline": true,
+    "burned_in": true,
+    "render_method": "imagemagick_png_overlay",
+    "style": {
+      "panel_size": "1240x132",
+      "panel_margin_x": 24,
+      "panel_margin_bottom": 24,
+      "font_family": "PingFang-SC-Semibold",
+      "text_fill": "#FFFFFF",
+      "text_point_size": 44,
+      "text_shadow": false,
+      "text_stroke": false
+    },
+    "image_paths": [
+      "outputs/video-run/compose/subtitle-images/001.png",
+      "outputs/video-run/compose/subtitle-images/002.png",
+      "outputs/video-run/compose/subtitle-images/003.png",
+      "outputs/video-run/compose/subtitle-images/004.png",
+      "outputs/video-run/compose/subtitle-images/005.png",
+      "outputs/video-run/compose/subtitle-images/006.png",
+      "outputs/video-run/compose/subtitle-images/007.png"
+    ],
+    "cue_count": 7
+  },
+  "compose_tool": "ffmpeg",
+  "note": "Video is stitched from three image assets only. Image segment durations and burned-in subtitles are aligned to audio durations. No provider video URL, secret, env content, or absolute path is written."
+}

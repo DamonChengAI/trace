@@ -1,0 +1,5 @@
+Checking MCP server health…
+
+context7: https://mcp.context7.com/mcp (HTTP) - ✓ Connected
+chrome-devtools: npx -y chrome-devtools-mcp@latest --isolated - ✓ Connected
+playwright: playwright-mcp  - ✓ Connected

@@ -1,0 +1,10 @@
+claude-ds -p \
+  --effort max \
+  --output-format stream-json \
+  --include-hook-events \
+  --verbose \
+  --permission-mode bypassPermissions \
+  --name "doubao-deepseek-20260603-201612" \
+  "$(cat /Users/dacheng/Desktop/doubao/execution/task-prompt.md)" \
+  > /Users/dacheng/Desktop/doubao/runs/20260603-201612/deepseek/trace.stream.jsonl \
+  2> /Users/dacheng/Desktop/doubao/runs/20260603-201612/deepseek/stderr.log

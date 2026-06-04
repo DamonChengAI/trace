@@ -1,0 +1,258 @@
+total 280
+drwxr-xr-x@ 24 dacheng  staff    768 Jun  3 19:47 .
+drwxr-xr-x@ 25 dacheng  staff    800 Jun  3 19:47 ..
+drwxr-xr-x@  4 dacheng  staff    128 Jun  3 19:47 .claude
+-rw-------@  1 dacheng  staff    246 Jun  2 22:58 .env.local
+-rw-r--r--@  1 dacheng  staff    106 Jun  3 19:47 .git
+-rw-r--r--@  1 dacheng  staff    277 Jun  3 19:47 .gitignore
+-rw-r--r--@  1 dacheng  staff   5683 Jun  3 19:47 AGENTS.md
+-rw-r--r--@  1 dacheng  staff   1088 Jun  3 19:47 LICENSE
+-rw-r--r--@  1 dacheng  staff   3793 Jun  3 19:47 README.en.md
+-rw-r--r--@  1 dacheng  staff   3862 Jun  3 19:47 README.md
+drwxr-xr-x@  7 dacheng  staff    224 Jun  3 19:47 app
+drwxr-xr-x@  4 dacheng  staff    128 Jun  3 19:47 docs
+drwxr-xr-x@ 10 dacheng  staff    320 Jun  3 19:47 lib
+-rw-r--r--@  1 dacheng  staff    247 Jun  3 19:47 next-env.d.ts
+-rw-r--r--@  1 dacheng  staff    129 Jun  3 19:47 next.config.ts
+-rw-r--r--@  1 dacheng  staff  86167 Jun  3 19:47 package-lock.json
+-rw-r--r--@  1 dacheng  staff   1662 Jun  3 19:47 package.json
+drwxr-xr-x@  3 dacheng  staff     96 Jun  3 19:47 public
+drwxr-xr-x@  3 dacheng  staff     96 Jun  3 19:47 reports
+drwxr-xr-x@ 17 dacheng  staff    544 Jun  3 19:47 scripts
+drwxr-xr-x@  3 dacheng  staff     96 Jun  3 19:47 skills
+drwxr-xr-x@  4 dacheng  staff    128 Jun  3 19:47 tests
+-rw-r--r--@  1 dacheng  staff    719 Jun  3 19:47 tsconfig.json
+-rw-r--r--@  1 dacheng  staff    243 Jun  3 19:47 vitest.config.ts
+
+---
+
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npm run hook:check"
+          }
+        ]
+      }
+    ]
+  }
+}
+total 8
+drwxr-xr-x@ 3 dacheng  staff   96 Jun  3 19:47 .
+drwxr-xr-x@ 4 dacheng  staff  128 Jun  3 19:47 ..
+-rw-r--r--@ 1 dacheng  staff  970 Jun  3 19:47 video-workflow-reviewer.md
+
+---
+
+> ai-workflow-studio@0.1.0 video:check
+> tsx scripts/check-video-run.ts
+
+video:check
+PASS required:outputs/video-run/request.md exists
+PASS required:outputs/video-run/research-notes.md exists
+PASS required:outputs/video-run/storyboard.json exists
+PASS required:outputs/video-run/media-plan.json exists
+PASS required:outputs/video-run/task-run.json exists
+PASS required:outputs/video-run/media-manifest.json exists
+PASS required:outputs/video-run/subagent-review.md exists
+PASS storyboard:parse valid json
+PASS storyboard:theme 快来购买豆包高级套餐吧！
+PASS storyboard:item_count 3
+PASS storyboard:duration 31.42
+PASS storyboard:image:1 public/mock-assets/COVER_001.png
+PASS storyboard:audio:1 outputs/video-run/audio/01-intro.mp3
+PASS storyboard:image:2 public/mock-assets/MEDIA_001.png
+PASS storyboard:audio:2 outputs/video-run/audio/02-value.mp3
+PASS storyboard:image:3 public/mock-assets/MEDIA_002.png
+PASS storyboard:audio:3 outputs/video-run/audio/03-cta.mp3
+PASS media005:failure_injected MEDIA_005
+PASS media005:auto_retry_disabled false
+PASS media005:explicit_recovery retried=true
+PASS media005:final_status completed
+PASS research:latest_sources present
+PASS final_video:path outputs/video-run/final-video.mp4
+PASS final_video:duration 31.42
+PASS final_video:image_count 3
+PASS final_video:no_provider_video false
+PASS real_provider:images 3
+PASS final_video:audio_timeline_count 3
+PASS final_video:audio_timeline_paths 3
+PASS final_video:duration_matches_audio 31.42 vs 31.42
+PASS final_video:subtitles_srt outputs/video-run/subtitles.srt
+PASS final_video:subtitles_burned_in true
+PASS final_video:subtitle_render_method imagemagick_png_overlay
+PASS final_video:subtitles_aligned true
+PASS final_video:subtitle_image_count 7 vs 7
+PASS final_video:subtitle_image_paths 7
+PASS final_video:subtitle_cue_count 7 vs 7
+PASS final_video:subtitle_text_matches_storyboard 124 vs 124
+PASS final_video:subtitle_starts_at_zero 0
+PASS final_video:subtitle_duration_matches_video 31.42 vs 31.42
+PASS real_audio:manifest outputs/video-run/real-audio-manifest.json
+PASS real_audio:ok true
+PASS real_audio:provider elevenlabs
+PASS real_audio:type audio
+PASS real_audio:mode real_tts_completed
+PASS real_audio:retry_cap 30
+PASS real_audio:item_count 3
+PASS real_audio:paths 3
+PASS real_audio:durations 31.42
+PASS real_audio:timeline_aligned true
+PASS real_audio:timeline_count 3 vs 3
+PASS real_audio:timeline_total 31.42 vs 31.42
+PASS real_provider:manifest outputs/video-run/real-provider-manifest.json
+PASS real_provider:type image
+PASS real_provider:image_count 3
+
+---
+
+全部 PASS。继续 security/report/hook/check。
+
+---
+
+> ai-workflow-studio@0.1.0 hook:check
+> tsx scripts/hook-check.ts
+
+hook:check
+PASS quality_check
+PASS security_check
+PASS final_video_manifest
+PASS subagent_review
+PASS report
+
+---
+
+PASS storyboard:duration 31.42
+PASS storyboard:image:1 public/mock-assets/COVER_001.png
+PASS storyboard:audio:1 outputs/video-run/audio/01-intro.mp3
+PASS storyboard:image:2 public/mock-assets/MEDIA_001.png
+PASS storyboard:audio:2 outputs/video-run/audio/02-value.mp3
+PASS storyboard:image:3 public/mock-assets/MEDIA_002.png
+PASS storyboard:audio:3 outputs/video-run/audio/03-cta.mp3
+PASS media005:failure_injected MEDIA_005
+PASS media005:auto_retry_disabled false
+PASS media005:explicit_recovery retried=true
+PASS media005:final_status completed
+PASS research:latest_sources present
+PASS final_video:path outputs/video-run/final-video.mp4
+PASS final_video:duration 31.42
+PASS final_video:image_count 3
+PASS final_video:no_provider_video false
+PASS real_provider:images 3
+PASS final_video:audio_timeline_count 3
+PASS final_video:audio_timeline_paths 3
+PASS final_video:duration_matches_audio 31.42 vs 31.42
+PASS final_video:subtitles_srt outputs/video-run/subtitles.srt
+PASS final_video:subtitles_burned_in true
+PASS final_video:subtitle_render_method imagemagick_png_overlay
+PASS final_video:subtitles_aligned true
+PASS final_video:subtitle_image_count 7 vs 7
+PASS final_video:subtitle_image_paths 7
+PASS final_video:subtitle_cue_count 7 vs 7
+PASS final_video:subtitle_text_matches_storyboard 124 vs 124
+PASS final_video:subtitle_starts_at_zero 0
+PASS final_video:subtitle_duration_matches_video 31.42 vs 31.42
+PASS real_audio:manifest outputs/video-run/real-audio-manifest.json
+PASS real_audio:ok true
+PASS real_audio:provider elevenlabs
+PASS real_audio:type audio
+PASS real_audio:mode real_tts_completed
+PASS real_audio:retry_cap 30
+PASS real_audio:item_count 3
+PASS real_audio:paths 3
+PASS real_audio:durations 31.42
+PASS real_audio:timeline_aligned true
+PASS real_audio:timeline_count 3 vs 3
+PASS real_audio:timeline_total 31.42 vs 31.42
+PASS real_provider:manifest outputs/video-run/real-provider-manifest.json
+PASS real_provider:type image
+PASS real_provider:image_count 3
+
+> ai-workflow-studio@0.1.0 security:check
+> tsx scripts/security-check.ts
+
+security:check
+findings=0
+
+> ai-workflow-studio@0.1.0 video:report
+> tsx scripts/render-video-run-report.ts
+
+video:report completed
+reports/video-run-report.md
+
+> ai-workflow-studio@0.1.0 hook:check
+> tsx scripts/hook-check.ts
+
+hook:check
+PASS quality_check
+PASS security_check
+PASS final_video_manifest
+PASS subagent_review
+PASS report
+
+> ai-workflow-studio@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.5 /Users/dacheng/Desktop/ship/workflow-sandbox-opus-20260603-194724
+
+
+ Test Files  2 passed (2)
+      Tests  12 passed (12)
+   Start at  19:58:36
+   Duration  136ms (transform 60ms, setup 0ms, import 93ms, tests 11ms, environment 0ms)
+
+---
+
+`npm run check` 全部通过（含 build、validate、demo、assets、compose、video:check 53 项、security findings=0、video:report、hook:check、12 个单元测试）。现在写交付总结。
+
+---
+
+## 交付小结
+
+### 业务结论
+《快来购买豆包高级套餐吧！》30 秒推广视频已可交付。内容基于联网检索的公开信息（三档套餐 68 / 200 / 500 元月费、功能不阉割、差异在用量与优先响应、基础对话仍免费），结尾明确"以官方最新页面为准"，避免把灰度阶段细节写成定论。视频可作为内部 Demo / 评测样片；对外投放前建议法务、市场再复核价格时效与品牌合规。
+
+### 产物
+- 最终视频：`outputs/video-run/final-video.mp4`，**31.42 秒 / 1280×720 / h264+aac**，由 **3 张真实 provider 图片**（apimart / gemini-3-pro-image-preview）拼接而成，**未调用任何真实 provider 视频接口**。
+- 真实媒体：
+  - 图片 **3/3 真实成功**（`real-provider-manifest.json`，retry policy hard_cap=30）。
+  - **ElevenLabs TTS 3/3 真实成功，无 mock 兜底**（`real-audio-manifest.json`, mode=`real_tts_completed`）。
+- 字幕：7 条 cue 已硬烧录进画面，时间线与 ffprobe 读到的音频时长完全对齐（31.42 vs 31.42）。
+- 研究记录：`outputs/video-run/research-notes.md`，含 10 个公开来源 URL + 访问日期 + 写作守则。
+- 失败恢复：MEDIA_005 forced_failure → 显式 retry → `final_status: completed`（trace 写入 `media-manifest.json.failure_recovery.events`）。
+- 中文报告：`reports/video-run-report.md`，按产品视角先讲结论、再讲证据。
+- 审查记录：`outputs/video-run/subagent-review.md`（`video-workflow-reviewer` subagent 已审查）。
+
+### 检查结果
+| 检查 | 状态 |
+|---|---|
+| `video:check`（REQUIRE_REAL_IMAGES/AUDIO/RESEARCH=1） | **53/53 PASS** |
+| `security:check` | **findings=0**，未泄漏 key / env / provider URL / 本地绝对路径 / 真实素材路径 |
+| `hook:check` | **5/5 PASS** |
+| `npm run check`（build + validate + demo + assets + compose + video:check + security + report + hook + vitest） | **全部通过，12 个单元测试 PASS** |
+
+### 用到的项目能力
+- 复用 Idea / Scene / Segment / Media Card / Media Task 主生成流程（`lib/workflow-service.ts`）。
+- 受控真实媒体入口：`real-media:smoke`（仅图片）+ `real-audio:smoke`（仅 TTS，含 mock 兜底）。
+- 显式失败恢复：`video:recover-media` 调用 `retryMedia` + 二次轮询。
+- ffmpeg 拼接 + ImageMagick 字幕图层烧录。
+- `video-workflow-reviewer` subagent 做独立审查。
+
+### 风险与下一步
+1. 价格、档位、灰度时点会随官方调整变化——脚本里已硬编码"以官方最新页面为准"，但发布前仍需人工二次复核。
+2. storyboard 里的 `image_asset` 字段仍指向 mock 缩略图路径，最终视频实际用的是 `real-provider-images/*.png`；`final-video-manifest.json` 的 `real_provider_images` 字段是权威来源。若团队要"以 storyboard 为唯一真相源"，可后续把这两边对齐。
+3. 字幕共 7 条 cue / 31.42 秒，节奏偏紧；如需更舒展可在 storyboard 增加分句缓冲或减字。
+4. 当前仅生成单语中文字幕；若推广面向海外可加英文/双语字幕道。
+
+### 来源（仅在研究记录与报告中允许出现）
+- [证券时报：豆包将推付费版本，包月68至500元](https://www.stcn.com/article/detail/3894033.html)
+- [每经网：3.45亿月活扛不住算力账单](https://www.nbd.com.cn/articles/2026-05-07/4382117.html)
+- [TechNode: ByteDance tests paid subscriptions for Doubao](https://technode.com/2026/05/06/bytedance-tests-paid-subscriptions-for-ai-app-doubao-in-push-toward-monetization/)
+- [TechNode: Doubao to launch paid plans in late June](https://technode.com/2026/06/02/bytedances-doubao-to-launch-paid-plans-in-late-june-link-with-douyin-e-commerce-push/)
+- [Caixin Global: ByteDance Plans Subscriptions for Doubao](https://www.caixinglobal.com/2026-05-05/bytedance-plans-subscriptions-for-ai-chatbot-doubao-102440708.html)
+- 完整 10 条来源见 `outputs/video-run/research-notes.md`

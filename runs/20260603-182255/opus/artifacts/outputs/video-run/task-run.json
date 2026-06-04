@@ -1,0 +1,281 @@
+{
+  "run_type": "mock-video-workflow-eval",
+  "generated_at": "2026-06-03T10:26:43.459Z",
+  "theme": "快来购买豆包高级套餐吧！",
+  "target_duration_seconds": 30,
+  "validation_ok": true,
+  "events": [
+    {
+      "action": "validate_sample",
+      "value": {
+        "ok": true,
+        "counts": {
+          "ideas": 2,
+          "scenes": 5,
+          "segments": 9,
+          "media_cards": 10,
+          "covers": 10
+        },
+        "issues": []
+      }
+    },
+    {
+      "action": "submit_media:MEDIA_001",
+      "value": {
+        "created": true,
+        "status": "processing",
+        "message": "media MEDIA_001 submitted"
+      }
+    },
+    {
+      "action": "media:MEDIA_001:poll_1",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "processing"
+        ],
+        "audio_statuses": []
+      }
+    },
+    {
+      "action": "media:MEDIA_001:poll_2",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "completed"
+        ],
+        "audio_statuses": []
+      }
+    },
+    {
+      "action": "submit_media:MEDIA_002",
+      "value": {
+        "created": true,
+        "status": "processing",
+        "message": "media MEDIA_002 submitted"
+      }
+    },
+    {
+      "action": "media:MEDIA_002:poll_1",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "processing"
+        ],
+        "audio_statuses": []
+      }
+    },
+    {
+      "action": "media:MEDIA_002:poll_2",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "completed"
+        ],
+        "audio_statuses": []
+      }
+    },
+    {
+      "action": "submit_media:MEDIA_003",
+      "value": {
+        "created": true,
+        "status": "processing",
+        "message": "media MEDIA_003 submitted"
+      }
+    },
+    {
+      "action": "media:MEDIA_003:poll_1",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "processing"
+        ],
+        "audio_statuses": []
+      }
+    },
+    {
+      "action": "media:MEDIA_003:poll_2",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "completed"
+        ],
+        "audio_statuses": []
+      }
+    },
+    {
+      "action": "submit_audio:SEG_001",
+      "value": {
+        "created": true,
+        "status": "processing",
+        "message": "audio for SEG_001 submitted"
+      }
+    },
+    {
+      "action": "audio:SEG_001:poll_1",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [],
+        "audio_statuses": [
+          "processing"
+        ]
+      }
+    },
+    {
+      "action": "audio:SEG_001:poll_2",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [],
+        "audio_statuses": [
+          "completed"
+        ]
+      }
+    },
+    {
+      "action": "submit_audio:SEG_002",
+      "value": {
+        "created": true,
+        "status": "processing",
+        "message": "audio for SEG_002 submitted"
+      }
+    },
+    {
+      "action": "audio:SEG_002:poll_1",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [],
+        "audio_statuses": [
+          "processing"
+        ]
+      }
+    },
+    {
+      "action": "audio:SEG_002:poll_2",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [],
+        "audio_statuses": [
+          "completed"
+        ]
+      }
+    },
+    {
+      "action": "submit_audio:SEG_003",
+      "value": {
+        "created": true,
+        "status": "processing",
+        "message": "audio for SEG_003 submitted"
+      }
+    },
+    {
+      "action": "audio:SEG_003:poll_1",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [],
+        "audio_statuses": [
+          "processing"
+        ]
+      }
+    },
+    {
+      "action": "audio:SEG_003:poll_2",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [],
+        "audio_statuses": [
+          "completed"
+        ]
+      }
+    },
+    {
+      "action": "submit_media:MEDIA_005_failure_path",
+      "value": {
+        "created": true,
+        "status": "processing",
+        "message": "media MEDIA_005 submitted"
+      }
+    },
+    {
+      "action": "media:MEDIA_005_failure:poll_1",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "processing"
+        ],
+        "audio_statuses": []
+      }
+    },
+    {
+      "action": "media:MEDIA_005_failure:poll_2",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "failed"
+        ],
+        "audio_statuses": []
+      }
+    },
+    {
+      "action": "submit_media:MEDIA_005:diagnostic_replay",
+      "value": {
+        "created": true,
+        "status": "processing",
+        "message": "media MEDIA_005 submitted"
+      }
+    },
+    {
+      "action": "media:MEDIA_005:diagnostic_failure:poll_1",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "processing"
+        ]
+      }
+    },
+    {
+      "action": "media:MEDIA_005:diagnostic_failure:poll_2",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "failed"
+        ]
+      }
+    },
+    {
+      "action": "retry_media:MEDIA_005:explicit_repair",
+      "value": {
+        "retried": true,
+        "status": "processing",
+        "message": "media MEDIA_005 retried"
+      }
+    },
+    {
+      "action": "media:MEDIA_005:explicit_repair:poll_1",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "processing"
+        ]
+      }
+    },
+    {
+      "action": "media:MEDIA_005:explicit_repair:poll_2",
+      "value": {
+        "updated_tasks": 1,
+        "media_statuses": [
+          "completed"
+        ]
+      }
+    }
+  ],
+  "checks_expected": [
+    "npm run real-media:smoke",
+    "npm run real-audio:smoke",
+    "npm run video:compose",
+    "npm run video:check",
+    "npm run security:check",
+    "npm run hook:check",
+    "npm run video:report",
+    "npm run check"
+  ]
+}

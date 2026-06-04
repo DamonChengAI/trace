@@ -1,0 +1,281 @@
+{
+  "ok": true,
+  "checked_at": "2026-06-03T12:32:33.406Z",
+  "checks": [
+    {
+      "name": "required:outputs/video-run/request.md",
+      "ok": true,
+      "detail": "exists"
+    },
+    {
+      "name": "required:outputs/video-run/research-notes.md",
+      "ok": true,
+      "detail": "exists"
+    },
+    {
+      "name": "required:outputs/video-run/storyboard.json",
+      "ok": true,
+      "detail": "exists"
+    },
+    {
+      "name": "required:outputs/video-run/media-plan.json",
+      "ok": true,
+      "detail": "exists"
+    },
+    {
+      "name": "required:outputs/video-run/task-run.json",
+      "ok": true,
+      "detail": "exists"
+    },
+    {
+      "name": "required:outputs/video-run/media-manifest.json",
+      "ok": true,
+      "detail": "exists"
+    },
+    {
+      "name": "required:outputs/video-run/subagent-review.md",
+      "ok": true,
+      "detail": "exists"
+    },
+    {
+      "name": "storyboard:parse",
+      "ok": true,
+      "detail": "valid json"
+    },
+    {
+      "name": "storyboard:theme",
+      "ok": true,
+      "detail": "快来购买豆包高级套餐吧！"
+    },
+    {
+      "name": "storyboard:item_count",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "storyboard:duration",
+      "ok": true,
+      "detail": "30"
+    },
+    {
+      "name": "storyboard:image:1",
+      "ok": true,
+      "detail": "public/mock-assets/COVER_001.png"
+    },
+    {
+      "name": "storyboard:audio:1",
+      "ok": true,
+      "detail": "outputs/video-run/audio/01-intro.mp3"
+    },
+    {
+      "name": "storyboard:image:2",
+      "ok": true,
+      "detail": "public/mock-assets/MEDIA_001.png"
+    },
+    {
+      "name": "storyboard:audio:2",
+      "ok": true,
+      "detail": "outputs/video-run/audio/02-value.mp3"
+    },
+    {
+      "name": "storyboard:image:3",
+      "ok": true,
+      "detail": "public/mock-assets/MEDIA_002.png"
+    },
+    {
+      "name": "storyboard:audio:3",
+      "ok": true,
+      "detail": "outputs/video-run/audio/03-cta.mp3"
+    },
+    {
+      "name": "media005:failure_injected",
+      "ok": true,
+      "detail": "MEDIA_005"
+    },
+    {
+      "name": "media005:auto_retry_disabled",
+      "ok": true,
+      "detail": "false"
+    },
+    {
+      "name": "media005:explicit_recovery",
+      "ok": true,
+      "detail": "retried=true"
+    },
+    {
+      "name": "media005:final_status",
+      "ok": true,
+      "detail": "completed"
+    },
+    {
+      "name": "research:latest_sources",
+      "ok": true,
+      "detail": "present"
+    },
+    {
+      "name": "final_video:path",
+      "ok": true,
+      "detail": "outputs/video-run/final-video.mp4"
+    },
+    {
+      "name": "final_video:duration",
+      "ok": true,
+      "detail": "30"
+    },
+    {
+      "name": "final_video:image_count",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "final_video:no_provider_video",
+      "ok": true,
+      "detail": "false"
+    },
+    {
+      "name": "real_provider:images",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "final_video:audio_timeline_count",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "final_video:audio_timeline_paths",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "final_video:duration_matches_audio",
+      "ok": true,
+      "detail": "30 vs 30"
+    },
+    {
+      "name": "final_video:subtitles_srt",
+      "ok": true,
+      "detail": "outputs/video-run/subtitles.srt"
+    },
+    {
+      "name": "final_video:subtitles_burned_in",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "final_video:subtitle_render_method",
+      "ok": true,
+      "detail": "imagemagick_png_overlay"
+    },
+    {
+      "name": "final_video:subtitles_aligned",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "final_video:subtitle_image_count",
+      "ok": true,
+      "detail": "6 vs 6"
+    },
+    {
+      "name": "final_video:subtitle_image_paths",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "final_video:subtitle_cue_count",
+      "ok": true,
+      "detail": "6 vs 6"
+    },
+    {
+      "name": "final_video:subtitle_text_matches_storyboard",
+      "ok": true,
+      "detail": "109 vs 109"
+    },
+    {
+      "name": "final_video:subtitle_starts_at_zero",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "final_video:subtitle_duration_matches_video",
+      "ok": true,
+      "detail": "30 vs 30"
+    },
+    {
+      "name": "real_audio:manifest",
+      "ok": true,
+      "detail": "outputs/video-run/real-audio-manifest.json"
+    },
+    {
+      "name": "real_audio:ok",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "real_audio:provider",
+      "ok": true,
+      "detail": "elevenlabs"
+    },
+    {
+      "name": "real_audio:type",
+      "ok": true,
+      "detail": "audio"
+    },
+    {
+      "name": "real_audio:mode",
+      "ok": true,
+      "detail": "real_tts_completed"
+    },
+    {
+      "name": "real_audio:retry_cap",
+      "ok": true,
+      "detail": "30"
+    },
+    {
+      "name": "real_audio:item_count",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "real_audio:paths",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "real_audio:durations",
+      "ok": true,
+      "detail": "30"
+    },
+    {
+      "name": "real_audio:timeline_aligned",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "real_audio:timeline_count",
+      "ok": true,
+      "detail": "3 vs 3"
+    },
+    {
+      "name": "real_audio:timeline_total",
+      "ok": true,
+      "detail": "30 vs 30"
+    },
+    {
+      "name": "real_provider:manifest",
+      "ok": true,
+      "detail": "outputs/video-run/real-provider-manifest.json"
+    },
+    {
+      "name": "real_provider:type",
+      "ok": true,
+      "detail": "image"
+    },
+    {
+      "name": "real_provider:image_count",
+      "ok": true,
+      "detail": "3"
+    }
+  ]
+}

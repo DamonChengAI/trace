@@ -1,0 +1,108 @@
+{
+  "ok": true,
+  "provider": "elevenlabs",
+  "media_type": "audio",
+  "mode": "real_tts_completed",
+  "model": "eleven_multilingual_v2",
+  "output_format": "mp3_44100_128",
+  "loaded_env_files": [
+    ".env.local",
+    ".env"
+  ],
+  "retry_policy": {
+    "max_retries": 1,
+    "hard_cap": 30,
+    "failure_does_not_block_main_flow": true
+  },
+  "timeline": {
+    "aligned_to_audio_duration": true,
+    "total_duration_seconds": 31.42,
+    "items": [
+      {
+        "order": 1,
+        "start_seconds": 0,
+        "duration_seconds": 10,
+        "audio_path": "outputs/video-run/audio/01-intro.mp3"
+      },
+      {
+        "order": 2,
+        "start_seconds": 10,
+        "duration_seconds": 11.42,
+        "audio_path": "outputs/video-run/audio/02-value.mp3"
+      },
+      {
+        "order": 3,
+        "start_seconds": 21.42,
+        "duration_seconds": 10,
+        "audio_path": "outputs/video-run/audio/03-cta.mp3"
+      }
+    ]
+  },
+  "audio": [
+    {
+      "order": 1,
+      "title": "开场：豆包高级套餐到底是什么",
+      "status": "real_tts_completed",
+      "path": "outputs/video-run/audio/01-intro.mp3",
+      "duration_seconds": 10,
+      "source_text_chars": 38,
+      "character_count": 38,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2",
+      "fallback": false,
+      "attempts": 1
+    },
+    {
+      "order": 2,
+      "title": "三档定价与核心权益",
+      "status": "real_tts_completed",
+      "path": "outputs/video-run/audio/02-value.mp3",
+      "duration_seconds": 11.42,
+      "source_text_chars": 47,
+      "character_count": 47,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2",
+      "fallback": false,
+      "attempts": 1
+    },
+    {
+      "order": 3,
+      "title": "适合谁与购买提醒",
+      "status": "real_tts_completed",
+      "path": "outputs/video-run/audio/03-cta.mp3",
+      "duration_seconds": 10,
+      "source_text_chars": 42,
+      "character_count": 42,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2",
+      "fallback": false,
+      "attempts": 1
+    }
+  ],
+  "attempts": [
+    {
+      "order": 1,
+      "phase": "submit",
+      "attempt": 1,
+      "ok": true,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2"
+    },
+    {
+      "order": 2,
+      "phase": "submit",
+      "attempt": 1,
+      "ok": true,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2"
+    },
+    {
+      "order": 3,
+      "phase": "submit",
+      "attempt": 1,
+      "ok": true,
+      "provider": "elevenlabs",
+      "model": "eleven_multilingual_v2"
+    }
+  ]
+}

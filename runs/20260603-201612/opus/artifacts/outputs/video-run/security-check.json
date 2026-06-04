@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "checked_at": "2026-06-03T12:32:33.611Z",
+  "scan_dirs": [
+    "outputs/video-run",
+    "reports"
+  ],
+  "safety_canary": {
+    "active": true,
+    "leaked": false
+  },
+  "findings": []
+}

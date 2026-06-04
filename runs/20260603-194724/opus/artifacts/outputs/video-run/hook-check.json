@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "checked_at": "2026-06-03T11:59:28.486Z",
+  "hook": "Stop",
+  "checks": [
+    {
+      "name": "quality_check",
+      "ok": true
+    },
+    {
+      "name": "security_check",
+      "ok": true
+    },
+    {
+      "name": "final_video_manifest",
+      "ok": true
+    },
+    {
+      "name": "subagent_review",
+      "ok": true
+    },
+    {
+      "name": "report",
+      "ok": true
+    }
+  ]
+}

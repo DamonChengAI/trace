@@ -1,0 +1,260 @@
+{
+  "mock_only": true,
+  "redacted": true,
+  "media_cards": [
+    {
+      "media_id": "MEDIA_001",
+      "segment_id": "SEG_001",
+      "media_type": "image",
+      "status": "completed",
+      "preview_url": "/mock-assets/MEDIA_001.png",
+      "last_error": null,
+      "provider": "mock-image",
+      "model": "mock-image-v1",
+      "required_fields": [
+        "media_id",
+        "segment_id",
+        "media_type",
+        "status",
+        "provider",
+        "model"
+      ]
+    },
+    {
+      "media_id": "MEDIA_002",
+      "segment_id": "SEG_002",
+      "media_type": "image",
+      "status": "completed",
+      "preview_url": "/mock-assets/MEDIA_002.png",
+      "last_error": null,
+      "provider": "mock-image",
+      "model": "mock-image-v1",
+      "required_fields": [
+        "media_id",
+        "segment_id",
+        "media_type",
+        "status",
+        "provider",
+        "model"
+      ]
+    },
+    {
+      "media_id": "MEDIA_003",
+      "segment_id": "SEG_003",
+      "media_type": "image",
+      "status": "completed",
+      "preview_url": "/mock-assets/MEDIA_003.png",
+      "last_error": null,
+      "provider": "mock-image",
+      "model": "mock-image-v1",
+      "required_fields": [
+        "media_id",
+        "segment_id",
+        "media_type",
+        "status",
+        "provider",
+        "model"
+      ]
+    },
+    {
+      "media_id": "MEDIA_004",
+      "segment_id": "SEG_004",
+      "media_type": "image",
+      "status": "idle",
+      "preview_url": null,
+      "last_error": null,
+      "provider": "mock-image",
+      "model": "mock-image-v1",
+      "required_fields": [
+        "media_id",
+        "segment_id",
+        "media_type",
+        "status",
+        "provider",
+        "model"
+      ]
+    },
+    {
+      "media_id": "MEDIA_005",
+      "segment_id": "SEG_004",
+      "media_type": "video",
+      "status": "completed",
+      "preview_url": "/mock-assets/MEDIA_005.mp4",
+      "last_error": null,
+      "provider": "mock-video",
+      "model": "mock-video-v1",
+      "required_fields": [
+        "media_id",
+        "segment_id",
+        "media_type",
+        "status",
+        "provider",
+        "model"
+      ]
+    }
+  ],
+  "media_tasks": [
+    {
+      "media_task_id": "MEDIA_001_TASK_01",
+      "media_id": "MEDIA_001",
+      "task_status": "completed",
+      "result_url": "/mock-assets/MEDIA_001.png",
+      "error_message": null,
+      "required_fields": [
+        "media_task_id",
+        "media_id",
+        "task_status",
+        "result_url",
+        "error_message"
+      ]
+    },
+    {
+      "media_task_id": "MEDIA_002_TASK_01",
+      "media_id": "MEDIA_002",
+      "task_status": "completed",
+      "result_url": "/mock-assets/MEDIA_002.png",
+      "error_message": null,
+      "required_fields": [
+        "media_task_id",
+        "media_id",
+        "task_status",
+        "result_url",
+        "error_message"
+      ]
+    },
+    {
+      "media_task_id": "MEDIA_003_TASK_01",
+      "media_id": "MEDIA_003",
+      "task_status": "completed",
+      "result_url": "/mock-assets/MEDIA_003.png",
+      "error_message": null,
+      "required_fields": [
+        "media_task_id",
+        "media_id",
+        "task_status",
+        "result_url",
+        "error_message"
+      ]
+    },
+    {
+      "media_task_id": "MEDIA_005_TASK_01",
+      "media_id": "MEDIA_005",
+      "task_status": "completed",
+      "result_url": "/mock-assets/MEDIA_005.mp4",
+      "error_message": null,
+      "required_fields": [
+        "media_task_id",
+        "media_id",
+        "task_status",
+        "result_url",
+        "error_message"
+      ]
+    }
+  ],
+  "audio_tasks": [
+    {
+      "audio_task_id": "SEG_001_AUDIO_TASK_01",
+      "segment_id": "SEG_001",
+      "task_status": "completed",
+      "result_url": "/mock-assets/mock-audio.wav",
+      "error_message": null,
+      "required_fields": [
+        "audio_task_id",
+        "segment_id",
+        "task_status",
+        "result_url",
+        "error_message"
+      ]
+    },
+    {
+      "audio_task_id": "SEG_002_AUDIO_TASK_01",
+      "segment_id": "SEG_002",
+      "task_status": "completed",
+      "result_url": "/mock-assets/mock-audio.wav",
+      "error_message": null,
+      "required_fields": [
+        "audio_task_id",
+        "segment_id",
+        "task_status",
+        "result_url",
+        "error_message"
+      ]
+    },
+    {
+      "audio_task_id": "SEG_003_AUDIO_TASK_01",
+      "segment_id": "SEG_003",
+      "task_status": "completed",
+      "result_url": "/mock-assets/mock-audio.wav",
+      "error_message": null,
+      "required_fields": [
+        "audio_task_id",
+        "segment_id",
+        "task_status",
+        "result_url",
+        "error_message"
+      ]
+    }
+  ],
+  "failure_recovery": {
+    "media_id": "MEDIA_005",
+    "forced_failure": true,
+    "auto_retry": false,
+    "retried": true,
+    "final_status": "completed",
+    "handled_by": "explicit_model_action",
+    "events": [
+      {
+        "action": "submit_media:MEDIA_005:diagnostic_replay",
+        "value": {
+          "created": true,
+          "status": "processing",
+          "message": "media MEDIA_005 submitted"
+        }
+      },
+      {
+        "action": "media:MEDIA_005:diagnostic_failure:poll_1",
+        "value": {
+          "updated_tasks": 1,
+          "media_statuses": [
+            "processing"
+          ]
+        }
+      },
+      {
+        "action": "media:MEDIA_005:diagnostic_failure:poll_2",
+        "value": {
+          "updated_tasks": 1,
+          "media_statuses": [
+            "failed"
+          ]
+        }
+      },
+      {
+        "action": "retry_media:MEDIA_005:explicit_repair",
+        "value": {
+          "retried": true,
+          "status": "processing",
+          "message": "media MEDIA_005 retried"
+        }
+      },
+      {
+        "action": "media:MEDIA_005:explicit_repair:poll_1",
+        "value": {
+          "updated_tasks": 1,
+          "media_statuses": [
+            "processing"
+          ]
+        }
+      },
+      {
+        "action": "media:MEDIA_005:explicit_repair:poll_2",
+        "value": {
+          "updated_tasks": 1,
+          "media_statuses": [
+            "completed"
+          ]
+        }
+      }
+    ]
+  }
+}

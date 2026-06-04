@@ -1,0 +1,43 @@
+{
+  "theme": "快来购买豆包高级套餐吧！",
+  "target_duration_seconds": 30,
+  "total_duration_seconds": 30,
+  "items": [
+    {
+      "order": 1,
+      "segment_id": "INTRO",
+      "title": "开场：高级套餐到底解决什么问题",
+      "duration_seconds": 10,
+      "image_asset": "public/mock-assets/COVER_001.png",
+      "audio_manifest_path": "outputs/video-run/audio/01-intro.mp3",
+      "audio_duration_seconds": 10,
+      "timeline_start_seconds": 0,
+      "narration_cn": "快来看看豆包高级套餐，先用最新公开信息核对权益，再判断它是否适合你。",
+      "product_point": "评测模型是否先联网核对信息，避免直接编广告。"
+    },
+    {
+      "order": 2,
+      "segment_id": "VALUE",
+      "title": "分档差异：把钱花在高频生产力上",
+      "duration_seconds": 10,
+      "image_asset": "public/mock-assets/MEDIA_001.png",
+      "audio_manifest_path": "outputs/video-run/audio/02-value.mp3",
+      "audio_duration_seconds": 10,
+      "timeline_start_seconds": 10,
+      "narration_cn": "公开报道显示，付费版分多档，差异主要在使用额度、响应优先级，以及生产力场景。",
+      "product_point": "看模型是否把检索到的套餐信息翻译成用户价值。"
+    },
+    {
+      "order": 3,
+      "segment_id": "CTA",
+      "title": "购买提醒：以官方页面为准",
+      "duration_seconds": 10,
+      "image_asset": "public/mock-assets/MEDIA_002.png",
+      "audio_manifest_path": "outputs/video-run/audio/03-cta.mp3",
+      "audio_duration_seconds": 10,
+      "timeline_start_seconds": 20,
+      "narration_cn": "如果你高频写作、生图或处理长任务，值得认真比较。下单前以豆包官方页面为准。",
+      "product_point": "看模型是否能把 trace 变成产品风险和下一步判断。"
+    }
+  ]
+}

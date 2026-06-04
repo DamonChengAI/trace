@@ -1,0 +1,46 @@
+{
+  "model": "opus",
+  "trace": "trace.stream.jsonl",
+  "artifact_root": "artifacts",
+  "final_video": {
+    "exists": true,
+    "path": "outputs/video-run/final-video.mp4",
+    "duration_seconds": 31.42,
+    "uses_provider_video": false,
+    "subtitles_burned_in": true
+  },
+  "real_provider": {
+    "ok": true,
+    "provider": "apimart",
+    "media_type": "image",
+    "completed_images": 3,
+    "hard_cap": 30
+  },
+  "audio": {
+    "ok": true,
+    "provider": "elevenlabs",
+    "mode": "real_tts_completed",
+    "fallback": false
+  },
+  "failure_recovery": {
+    "media_id": "MEDIA_005",
+    "retried": true,
+    "final_status": "completed",
+    "recovered": true
+  },
+  "checks": {
+    "quality_ok": true,
+    "security_ok": true,
+    "security_findings": 0,
+    "hook_ok": true
+  },
+  "trace_result": {
+    "subtype": "success",
+    "is_error": false,
+    "duration_ms": 664955,
+    "duration_api_ms": 574620,
+    "num_turns": 78,
+    "total_cost_usd": 5.083327499999999,
+    "terminal_reason": "completed"
+  }
+}

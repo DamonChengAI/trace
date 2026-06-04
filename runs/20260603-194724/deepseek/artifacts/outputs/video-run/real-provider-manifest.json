@@ -1,0 +1,189 @@
+{
+  "ok": true,
+  "provider": "apimart",
+  "media_type": "image",
+  "model": "gemini-3-pro-image-preview",
+  "loaded_env_files": [
+    ".env.local",
+    ".env",
+    ".env",
+    ".env"
+  ],
+  "retry_policy": {
+    "max_submit_retries": 3,
+    "max_poll_rounds": 30,
+    "poll_interval_ms": 10000,
+    "hard_cap": 30
+  },
+  "images": [
+    {
+      "order": 1,
+      "title": "开场：豆包高级套餐来了",
+      "ok": true,
+      "path": "outputs/video-run/real-provider-images/01.png",
+      "task_status": "completed",
+      "task_id_present": true
+    },
+    {
+      "order": 2,
+      "title": "核心权益和适用人群",
+      "ok": true,
+      "path": "outputs/video-run/real-provider-images/02.png",
+      "task_status": "completed",
+      "task_id_present": true
+    },
+    {
+      "order": 3,
+      "title": "购买提醒",
+      "ok": true,
+      "path": "outputs/video-run/real-provider-images/03.png",
+      "task_status": "completed",
+      "task_id_present": true
+    }
+  ],
+  "attempts": [
+    {
+      "phase": "submit",
+      "order": 1,
+      "submit_attempt": 1,
+      "ok": true,
+      "task_id_present": true
+    },
+    {
+      "phase": "submit",
+      "order": 2,
+      "submit_attempt": 1,
+      "ok": true,
+      "task_id_present": true
+    },
+    {
+      "phase": "submit",
+      "order": 3,
+      "submit_attempt": 1,
+      "ok": true,
+      "task_id_present": true
+    },
+    {
+      "phase": "status",
+      "order": 1,
+      "poll_round": 1,
+      "task_status": "pending",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 2,
+      "poll_round": 1,
+      "task_status": "pending",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 3,
+      "poll_round": 1,
+      "task_status": "pending",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 1,
+      "poll_round": 2,
+      "task_status": "processing",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 2,
+      "poll_round": 2,
+      "task_status": "pending",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 3,
+      "poll_round": 2,
+      "task_status": "pending",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 1,
+      "poll_round": 3,
+      "task_status": "processing",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 2,
+      "poll_round": 3,
+      "task_status": "pending",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 3,
+      "poll_round": 3,
+      "task_status": "pending",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 1,
+      "poll_round": 4,
+      "task_status": "processing",
+      "result_url_available": false,
+      "error_message": null
+    },
+    {
+      "phase": "status",
+      "order": 2,
+      "poll_round": 4,
+      "task_status": "completed",
+      "result_url_available": true,
+      "error_message": null
+    },
+    {
+      "phase": "download",
+      "order": 2,
+      "ok": true,
+      "bytes": 490833
+    },
+    {
+      "phase": "status",
+      "order": 3,
+      "poll_round": 4,
+      "task_status": "completed",
+      "result_url_available": true,
+      "error_message": null
+    },
+    {
+      "phase": "download",
+      "order": 3,
+      "ok": true,
+      "bytes": 495710
+    },
+    {
+      "phase": "status",
+      "order": 1,
+      "poll_round": 5,
+      "task_status": "completed",
+      "result_url_available": true,
+      "error_message": null
+    },
+    {
+      "phase": "download",
+      "order": 1,
+      "ok": true,
+      "bytes": 1123597
+    }
+  ]
+}
