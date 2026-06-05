@@ -388,7 +388,7 @@ function markdown(metrics) {
       { label: "用 LLM 吗", value: (row) => row.llm }
     ]),
     "",
-    "规则裁判的好处是同一份 trace 跑十遍结果一致，每个分数都能反查字段和规则。软质量只用可量化代理信号近似，后续若加 LLM 辅助评分，要和确定性指标分开标注。",
+    "判定层（门槛和区分）的好处是同一份 trace 跑十遍结果一致，每个分数都能反查字段和规则。规则碰不到的软质量另设一层，由 Opus 4.8 按 rubric 评、非确定性、与判定分开标注。",
     "",
     "## ⑤ 能力覆盖主表",
     "",
@@ -748,10 +748,10 @@ function html(metrics) {
     <section id="tools">
       <div class="sectionHead">
         <div><div class="num">④</div><h2>我做的评测工具</h2></div>
-        <p>raw trace 又长又技术，产品面试官没法直接读。工具把它压成产品能看懂的证据、档位和结论。三个工具都是纯规则代码，零 LLM 调用。</p>
+        <p>raw trace 又长又技术，产品面试官没法直接读。工具把它压成产品能看懂的证据、档位和结论。判定层（门槛和区分）全用规则代码、不靠 LLM、可复现；规则碰不到的软质量另设一层由 Opus 4.8 评、标注分开。</p>
       </div>
       ${toolsTable}
-      <div class="toolNote">坚持纯规则，是为了复现和可解释。同一份 trace 跑十遍结果一致；每个结论都能反查到字段、规则和源文件。软质量目前用可量化代理信号近似，后续若加 LLM 评分层，要和确定性指标分开标注。</div>
+      <div class="toolNote">判定层坚持纯规则，是为了复现和可解释：同一份 trace 跑十遍结果一致，每个结论都能反查到字段、规则和源文件。规则碰不到的软质量（研究深度、文案、恢复思路）由 LLM（Opus 4.8）按 rubric 评、非确定性、与判定分开标注。</div>
     </section>
 
     <section id="capability">
