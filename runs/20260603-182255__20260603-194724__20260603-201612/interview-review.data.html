@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>豆包 Agent 评测作品 20260603-182255__20260603-194724__20260603-201612</title>
+  <title>Agent Trace 评测作品 20260603-182255__20260603-194724__20260603-201612</title>
   <style>
     :root {
       --bg: #f6f7f2;
@@ -185,7 +185,7 @@
   <header>
     <div class="wrap">
       <nav>
-        <b>Doubao Agent Trace Eval</b>
+        <b>Agent Trace Eval</b>
         <span>
           <a href="#why">为什么</a>
           <a href="#method">方法</a>
@@ -240,16 +240,16 @@
     <section id="tools">
       <div class="sectionHead">
         <div><div class="num">④</div><h2>我做的评测工具</h2></div>
-        <p>raw trace 又长又技术，产品面试官没法直接读。工具把它压成产品能看懂的证据、档位和结论。三个工具都是纯规则代码，零 LLM 调用。</p>
+        <p>raw trace 又长又技术，产品读者没法直接读。工具把它压成产品能看懂的证据、档位和结论。判定层（门槛和区分）全用规则代码、不靠 LLM、可复现；规则碰不到的软质量另设一层由 Opus 4.8 评、标注分开。</p>
       </div>
       
     <table>
       <thead><tr><th>工具</th><th>角色</th><th>怎么工作（原理）</th><th>用 LLM 吗</th></tr></thead>
       <tbody>
-        <tr><td>compare-traces.mjs</td><td>grader（评测器）</td><td>读取 trace.stream.jsonl 和 manifest，用计数、正则和固定规则抽取成本、耗时、来源域名、错误、一次通过率、canary 泄露等信号，再输出 metrics.json 和 report.md。</td><td>否</td></tr><tr><td>render-interview-html.mjs</td><td>展示器</td><td>读取 metrics.json，套 10 板块 HTML / Markdown 模板；不重新判断胜负，只负责结构化呈现。</td><td>否</td></tr><tr><td>check-sandbox-baseline.mjs</td><td>公平性校验</td><td>跑前扫描 sandbox baseline，确认没有 doubao 评测仓文件、prompt、runbook、计划文档，避免被测模型偷看评分标准。</td><td>否</td></tr>
+        <tr><td>compare-traces.mjs</td><td>grader（评测器）</td><td>读取 trace.stream.jsonl 和 manifest，用计数、正则和固定规则抽取成本、耗时、来源域名、错误、一次通过率、canary 泄露等信号，再输出 metrics.json 和 report.md。</td><td>否</td></tr><tr><td>render-interview-html.mjs</td><td>展示器</td><td>读取 metrics.json，套 10 板块 HTML / Markdown 模板；不重新判断胜负，只负责结构化呈现。</td><td>否</td></tr><tr><td>check-sandbox-baseline.mjs</td><td>公平性校验</td><td>跑前扫描 sandbox baseline，确认没有 Trace 评测仓文件、prompt、runbook、计划文档，避免被测模型偷看评分标准。</td><td>否</td></tr>
       </tbody>
     </table>
-      <div class="toolNote">坚持纯规则，是为了复现和可解释。同一份 trace 跑十遍结果一致；每个结论都能反查到字段、规则和源文件。软质量目前用可量化代理信号近似，后续若加 LLM 评分层，要和确定性指标分开标注。</div>
+      <div class="toolNote">判定层坚持纯规则，是为了复现和可解释：同一份 trace 跑十遍结果一致，每个结论都能反查到字段、规则和源文件。规则碰不到的软质量（研究深度、文案、恢复思路）由 LLM（Opus 4.8）按 rubric 评、非确定性、与判定分开标注。</div>
     </section>
 
     <section id="capability">

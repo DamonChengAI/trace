@@ -1,4 +1,4 @@
-# 豆包 Agent 生产力评测作品：20260603-182255__20260603-194724__20260603-201612
+# Agent Trace 评测作品：20260603-182255__20260603-194724__20260603-201612
 
 ## ① Hero：产品结论 + 决策建议
 
@@ -22,9 +22,9 @@
 | --- | --- | --- | --- |
 | compare-traces.mjs | grader（评测器） | 读取 trace.stream.jsonl 和 manifest，用计数、正则和固定规则抽取成本、耗时、来源域名、错误、一次通过率、canary 泄露等信号，再输出 metrics.json 和 report.md。 | 否 |
 | render-interview-html.mjs | 展示器 | 读取 metrics.json，套 10 板块 HTML / Markdown 模板；不重新判断胜负，只负责结构化呈现。 | 否 |
-| check-sandbox-baseline.mjs | 公平性校验 | 跑前扫描 sandbox baseline，确认没有 doubao 评测仓文件、prompt、runbook、计划文档，避免被测模型偷看评分标准。 | 否 |
+| check-sandbox-baseline.mjs | 公平性校验 | 跑前扫描 sandbox baseline，确认没有 Trace 评测仓文件、prompt、runbook、计划文档，避免被测模型偷看评分标准。 | 否 |
 
-规则裁判的好处是同一份 trace 跑十遍结果一致，每个分数都能反查字段和规则。软质量只用可量化代理信号近似，后续若加 LLM 辅助评分，要和确定性指标分开标注。
+判定层（门槛和区分）的好处是同一份 trace 跑十遍结果一致，每个分数都能反查字段和规则。规则碰不到的软质量另设一层，由 Opus 4.8 按 rubric 评、非确定性、与判定分开标注。
 
 ## ⑤ 能力覆盖主表
 

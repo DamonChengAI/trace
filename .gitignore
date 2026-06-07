@@ -10,12 +10,13 @@
 .playwright-mcp/
 
 # ───────── 私人飞书文档备份与一次性推送脚本(非作品内容,含私密文档 token,不入公开库)─────────
+/对外文档-修订稿.md
 recovery/
 tools/feishu-*.mjs
 tools/push-to-feishu.mjs
 feishu-video-uploads/
 
-# ───────── 根目录飞书长截图(临时素材,已移至 ../doubao-private)─────────
+# ───────── 根目录飞书长截图(临时素材,已移至 ../trace-private)─────────
 /full.jpeg
 /hero.jpeg
 /s5.jpeg

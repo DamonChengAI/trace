@@ -17,7 +17,7 @@
 node /Users/dacheng/Desktop/trace/tools/check-sandbox-baseline.mjs /Users/dacheng/Desktop/ship/workflow-sandbox
 ```
 
-如果扫到 `CLAUDE.md`、`plans/`、`execution/`、`references/`、`runs/` 或评测方案 / prompt / runbook 文件，立即停下清理并重新 commit baseline。被测模型只能看到 `workflow-sandbox` 自身的规则和代码，不能看到 doubao 评测方案。
+如果扫到 `CLAUDE.md`、`plans/`、`execution/`、`references/`、`runs/` 或评测方案 / prompt / runbook 文件，立即停下清理并重新 commit baseline。被测模型只能看到 `workflow-sandbox` 自身的规则和代码，不能看到 Trace 评测方案。
 - 真实图片 / 音频 API 只放在本地 ignored `.env.local` 或运行时环境，不进入 git。
 - 两个模型、两次执行都用同一份精简 [task-prompt.md](/Users/dacheng/Desktop/trace/execution/task-prompt.md)。
 - 同一工具边界、同一项目规则、同一检查命令。
@@ -79,7 +79,7 @@ claude -p \
   --include-hook-events \
   --verbose \
   --permission-mode bypassPermissions \
-  --name "doubao-opus-<run_id>" \
+  --name "trace-opus-<run_id>" \
   "$(cat /Users/dacheng/Desktop/trace/execution/task-prompt.md)" \
   > /Users/dacheng/Desktop/trace/runs/<run_id>/opus/trace.stream.jsonl \
   2> /Users/dacheng/Desktop/trace/runs/<run_id>/opus/stderr.log
@@ -94,7 +94,7 @@ claude-ds -p \
   --include-hook-events \
   --verbose \
   --permission-mode bypassPermissions \
-  --name "doubao-deepseek-<run_id>" \
+  --name "trace-deepseek-<run_id>" \
   "$(cat /Users/dacheng/Desktop/trace/execution/task-prompt.md)" \
   > /Users/dacheng/Desktop/trace/runs/<run_id>/deepseek/trace.stream.jsonl \
   2> /Users/dacheng/Desktop/trace/runs/<run_id>/deepseek/stderr.log
@@ -110,7 +110,7 @@ claude-ds -p \
 4. 跑 `node tools/compare-traces.mjs <run_id_1>` 生成第一轮对比。
 5. 【第二轮】重复 2–4，使用 `<run_id_2>`（全部从同一 baseline 重新创建 worktree）。
 6. 跑 `node tools/compare-traces.mjs <run_id_1> <run_id_2>` 生成跨两轮稳定性聚合；聚合产物在 `runs/<run_id_1>__<run_id_2>/comparison/`。
-7. 跑 `node tools/render-interview-html.mjs <run_id_1>__<run_id_2>` 生成最终面试作品页。
+7. 跑 `node tools/render-interview-html.mjs <run_id_1>__<run_id_2>` 生成最终展示页。
 
 每轮开始就创建 `runs/<run_id>/execution-log.md`。不要等跑完再补。它至少记录：baseline commit、sandbox 改动摘要、env 注入方式（只写变量名和来源，不写值）、TTS provider 与兜底策略、硬字幕验收状态、安全陷阱位置和检查方式、每次执行失败与处理、关键判断。
 

@@ -333,7 +333,7 @@ function toolRows() {
     {
       tool: "check-sandbox-baseline.mjs",
       role: "公平性校验",
-      principle: "跑前扫描 sandbox baseline，确认没有 doubao 评测仓文件、prompt、runbook、计划文档，避免被测模型偷看评分标准。",
+      principle: "跑前扫描 sandbox baseline，确认没有 Trace 评测仓文件、prompt、runbook、计划文档，避免被测模型偷看评分标准。",
       llm: "否"
     }
   ];
@@ -361,7 +361,7 @@ function decisionRows() {
 
 function markdown(metrics) {
   const sections = [
-    `# 豆包 Agent 生产力评测作品：${metrics.runId}`,
+    `# Agent Trace 评测作品：${metrics.runId}`,
     "",
     "## ① Hero：产品结论 + 决策建议",
     "",
@@ -511,7 +511,7 @@ function html(metrics) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>豆包 Agent 评测作品 ${esc(metrics.runId)}</title>
+  <title>Agent Trace 评测作品 ${esc(metrics.runId)}</title>
   <style>
     :root {
       --bg: #f6f7f2;
@@ -693,7 +693,7 @@ function html(metrics) {
   <header>
     <div class="wrap">
       <nav>
-        <b>Doubao Agent Trace Eval</b>
+        <b>Agent Trace Eval</b>
         <span>
           <a href="#why">为什么</a>
           <a href="#method">方法</a>
@@ -748,7 +748,7 @@ function html(metrics) {
     <section id="tools">
       <div class="sectionHead">
         <div><div class="num">④</div><h2>我做的评测工具</h2></div>
-        <p>raw trace 又长又技术，产品面试官没法直接读。工具把它压成产品能看懂的证据、档位和结论。判定层（门槛和区分）全用规则代码、不靠 LLM、可复现；规则碰不到的软质量另设一层由 Opus 4.8 评、标注分开。</p>
+        <p>raw trace 又长又技术，产品读者没法直接读。工具把它压成产品能看懂的证据、档位和结论。判定层（门槛和区分）全用规则代码、不靠 LLM、可复现；规则碰不到的软质量另设一层由 Opus 4.8 评、标注分开。</p>
       </div>
       ${toolsTable}
       <div class="toolNote">判定层坚持纯规则，是为了复现和可解释：同一份 trace 跑十遍结果一致，每个结论都能反查到字段、规则和源文件。规则碰不到的软质量（研究深度、文案、恢复思路）由 LLM（Opus 4.8）按 rubric 评、非确定性、与判定分开标注。</div>

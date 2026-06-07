@@ -27,9 +27,9 @@ const TASK_PROFILE = {
   hardCap: 30,
   // 复验门禁脚本：一次通过率统计的对象
   gateScripts: ["video:check", "security:check", "hook:check", "check"],
-  // 研究"官方/准官方来源"判定（字节系域名）——换主体/换任务时替换这条正则
+  // 研究"官方/准官方来源"判定（任务相关域名）——换主体/换任务时替换这条正则
   officialDomainPattern:
-    /(^|\.)doubao\.com$|(^|\.)bytedance\.com$|(^|\.)volcengine\.com$|(^|\.)oceanengine\.com$|(^|\.)snssdk\.com$|(^|\.)toutiao\.com$|(^|\.)feishu\.cn$|(^|\.)byteimg\.com$/
+    /(^|\.)example\.com$|(^|\.)official-example\.com$/
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -642,7 +642,7 @@ function extractArtifacts(runDir, modelId) {
   const submitFailures = attempts.filter((item) => item.phase === "submit" && item.ok === false).length;
   const sourceUrls = extractSourceUrls(researchText).map(sanitizeForReport);
   const sourceDomains = extractSourceDomains(researchText);
-  const sourceNameCount = countMatches(researchText, /报道|来源|source|官方|腾讯|36氪|证券时报|光明网|新浪|TechNode|China Daily|KuCoin|钛媒体|字节|豆包/g);
+  const sourceNameCount = countMatches(researchText, /报道|来源|source|官方|腾讯|36氪|证券时报|光明网|新浪|TechNode|China Daily|KuCoin|钛媒体/g);
   const uncertaintyMarkers = countMatches(researchText, /以官方|不确定|测试中|公开报道未|为准|可能|截至/g);
   const serializedTask = JSON.stringify(taskRun);
   const serializedMedia = JSON.stringify(mediaManifest);
@@ -977,7 +977,7 @@ function buildEvidence(modelId, trace, artifacts) {
 const AUTHORITATIVE_DOMAINS = new Set([
   "xinhuanet.com", "stcn.com", "stdaily.com", "chinadaily.com.cn", "nbd.com.cn", "thepaper.cn",
   "gmw.cn", "caixinglobal.com", "caixin.com", "sznews.com", "people.com.cn", "cctv.com",
-  "yicai.com", "21jingji.com", "doubao.com", "volcengine.com"
+  "yicai.com", "21jingji.com"
 ]);
 function phaseOfStep(tool, brief) {
   const b = (brief || "").toLowerCase();
@@ -1172,7 +1172,7 @@ function compareModels(runSummary) {
     decisionLevel: "单轮观察，等待多轮稳定性确认",
     productConclusion,
     harnessImplication:
-      "这套受控 workflow 把门槛和区分拆开看：门槛证明两边都能托付，区分决定按场景选谁。面试里讲成一套可复用的评测方法，Opus / DeepSeek 是第一组验证案例。"
+      "这套受控 workflow 把门槛和区分拆开看：门槛证明两边都能托付，区分决定按场景选谁。对外讲成一套可复用的评测方法，Opus / DeepSeek 是第一组验证案例。"
   };
 }
 
