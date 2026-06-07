@@ -49,7 +49,7 @@
 
 | 仓库 | 位置 | 是什么 | 在这里改什么 |
 |---|---|---|---|
-| **doubao（评测仓）** | `/Users/dacheng/Desktop/doubao` | 评测工具 + 方案 + prompt + 执行结果 | 精简 task-prompt、改 runbook、改两个评测工具、改方案文档 |
+| **doubao（评测仓）** | `/Users/dacheng/Desktop/trace` | 评测工具 + 方案 + prompt + 执行结果 | 精简 task-prompt、改 runbook、改两个评测工具、改方案文档 |
 | **workflow-sandbox（被测环境）** | 见 `execution/dual-model-execution-runbook.md` 的 baseline 约定（执行时从 baseline commit 创建隔离 worktree） | 模型实际执行任务的 Next.js + 脚本项目，含 `AGENTS.md`、`skills/`、`scripts/`、`lib/`、`.claude/` 等 | 显式化产物 schema、补音频能力、埋安全陷阱、收紧约束 |
 
 > **执行前置要求**：codex 在改 sandbox 前，**必须先读 sandbox 当前结构**（`AGENTS.md`、`skills/video-workflow/SKILL.md`、`scripts/*.ts`、`lib/*.ts`、`.claude/`、`package.json`、`security-check.ts`），以实际代码为准。本文给出的是**意图 + 验收标准 + 文件线索**，不是逐行代码。

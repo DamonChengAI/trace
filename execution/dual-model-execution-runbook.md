@@ -14,12 +14,12 @@
 - baseline 不得包含评测仓文件。正式创建 worktree 前先跑：
 
 ```bash
-node /Users/dacheng/Desktop/doubao/tools/check-sandbox-baseline.mjs /Users/dacheng/Desktop/ship/workflow-sandbox
+node /Users/dacheng/Desktop/trace/tools/check-sandbox-baseline.mjs /Users/dacheng/Desktop/ship/workflow-sandbox
 ```
 
 如果扫到 `CLAUDE.md`、`plans/`、`execution/`、`references/`、`runs/` 或评测方案 / prompt / runbook 文件，立即停下清理并重新 commit baseline。被测模型只能看到 `workflow-sandbox` 自身的规则和代码，不能看到 doubao 评测方案。
 - 真实图片 / 音频 API 只放在本地 ignored `.env.local` 或运行时环境，不进入 git。
-- 两个模型、两次执行都用同一份精简 [task-prompt.md](/Users/dacheng/Desktop/doubao/execution/task-prompt.md)。
+- 两个模型、两次执行都用同一份精简 [task-prompt.md](/Users/dacheng/Desktop/trace/execution/task-prompt.md)。
 - 同一工具边界、同一项目规则、同一检查命令。
 - 后一次 / 后一个模型不能看到前面的产物、diff、trace 或总结。
 
@@ -80,9 +80,9 @@ claude -p \
   --verbose \
   --permission-mode bypassPermissions \
   --name "doubao-opus-<run_id>" \
-  "$(cat /Users/dacheng/Desktop/doubao/execution/task-prompt.md)" \
-  > /Users/dacheng/Desktop/doubao/runs/<run_id>/opus/trace.stream.jsonl \
-  2> /Users/dacheng/Desktop/doubao/runs/<run_id>/opus/stderr.log
+  "$(cat /Users/dacheng/Desktop/trace/execution/task-prompt.md)" \
+  > /Users/dacheng/Desktop/trace/runs/<run_id>/opus/trace.stream.jsonl \
+  2> /Users/dacheng/Desktop/trace/runs/<run_id>/opus/stderr.log
 ```
 
 DeepSeek：
@@ -95,9 +95,9 @@ claude-ds -p \
   --verbose \
   --permission-mode bypassPermissions \
   --name "doubao-deepseek-<run_id>" \
-  "$(cat /Users/dacheng/Desktop/doubao/execution/task-prompt.md)" \
-  > /Users/dacheng/Desktop/doubao/runs/<run_id>/deepseek/trace.stream.jsonl \
-  2> /Users/dacheng/Desktop/doubao/runs/<run_id>/deepseek/stderr.log
+  "$(cat /Users/dacheng/Desktop/trace/execution/task-prompt.md)" \
+  > /Users/dacheng/Desktop/trace/runs/<run_id>/deepseek/trace.stream.jsonl \
+  2> /Users/dacheng/Desktop/trace/runs/<run_id>/deepseek/stderr.log
 ```
 
 说明：`-p` 非交互执行；`stream-json` 是主 trace 源；`--include-hook-events` 捕捉 hook（钩子检查）生命周期；`bypassPermissions` 仅在隔离 worktree 里用；DeepSeek 模型由 `claude-ds` wrapper 控制，不额外传 `--model`。

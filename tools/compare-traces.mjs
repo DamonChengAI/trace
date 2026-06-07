@@ -159,7 +159,7 @@ function sanitizeForReport(value) {
     .replace(/\/Users\/dacheng\/Desktop\/ship\/workflow-sandbox-deepseek-run-[0-9]+/g, "[deepseek-worktree]")
     .replace(/\/Users\/dacheng\/Desktop\/ship\/workflow-sandbox-opus-run/g, "[opus-worktree]")
     .replace(/\/Users\/dacheng\/Desktop\/ship\/workflow-sandbox-deepseek-run/g, "[deepseek-worktree]")
-    .replace(/\/Users\/dacheng\/Desktop\/doubao\/runs\/[A-Za-z0-9_.:-]+/g, "[run-dir]")
+    .replace(/\/Users\/dacheng\/Desktop\/trace\/runs\/[A-Za-z0-9_.:-]+/g, "[run-dir]")
     .replace(/\/Users\/dacheng\/[^\s"')]+/g, "[local-path]")
     .replace(/https?:\/\/api\.[^\s"')]+/g, "[provider-url]")
     .replace(/Bearer\s+[A-Za-z0-9._-]+/g, "Bearer [redacted]")
