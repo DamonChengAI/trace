@@ -18,7 +18,7 @@ trace comparator 可以优先复用开源工具或现成日志/trace 能力，�
 
 所有后续工作都必须服务这件事：
 
-- 任务要简单好讲：生成 30 秒左右视频，标题是《快来购买 Trace 高级套餐吧！》。
+- 任务要简单好讲：生成 30 秒左右视频，标题是《快来看2026世界杯吧》。
 - workflow 要完整但不扩张：联网检索最新公开信息、3 张图片、对应音频、图片拼接成片、失败处理、hook、subagent、安全检查、交付报告。
 - trace 要可比较：同一 prompt、同一 baseline、同一工具边界、同一检查命令、隔离执行。
 - Claude Code 核心能力要有最小证据：AGENTS、nested rules、skill、scripts、hook、subagent、MCP/search、eval/review、security check、grader。
@@ -41,9 +41,9 @@ execution/dual-model-execution-runbook.md
 
 - 不做前端可视化。
 - 不做前端页面 / dashboard。
-- 生成 30 秒左右视频，标题是《快来购买 Trace 高级套餐吧！》。
+- 生成 30 秒左右视频，标题是《快来看2026世界杯吧》。
 - 只生成图片，不生成 provider 视频；每条视频用 3 张图片拼接。
-- 先联网检索 Trace 高级套餐或会员的最新公开信息，再生成脚本。
+- 先联网检索 2026 FIFA 世界杯相关的最新公开信息，再生成脚本。
 - 任务约束写入 `workflow-sandbox` 的 AGENTS、nested rules、skill、hook、subagent、scripts 和 check。
 - 用精简 prompt：只给目标/约束/边界，不喂步骤、不点名工具，让模型自主读懂项目。
 - 用 Opus 和 DeepSeek 各执行两次（共 4 次、2 个 run_id）比较 trace 差异，验证关键差异是否稳定复现。
