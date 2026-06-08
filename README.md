@@ -1,4 +1,4 @@
-# Agent Trace Grader（轨迹评测工具）
+# Agent Trace Grader（Trace评测工具）
 
 > 把 Agent（智能体）在 Claude Code 里执行任务的**原始轨迹（trace，执行记录）**，评成产品能看懂的**门槛（过没过）＋ 区分（谁更强）**结论。两层：**确定性规则层**（可复现、可反查）＋ **LLM 软质量层**（Opus 4.8，评规则碰不到的软质量、标注分开）。
 >
